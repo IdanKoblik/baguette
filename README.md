@@ -1,0 +1,2 @@
+# baguette
+Wayland status bar
