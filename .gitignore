@@ -1,3 +1,7 @@
+# Local
+baguette
+build/
+
 # Prerequisites
 *.d
 
