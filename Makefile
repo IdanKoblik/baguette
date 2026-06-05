@@ -10,9 +10,13 @@ SRCS := $(shell find $(SRC_DIR) -name '*.c')
 OBJS := $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SRCS))
 DEPS := $(OBJS:.o=.d)
 
-.PHONY: all clean run
+.PHONY: all clean run compdb
 
 all: $(BIN)
+
+# Generate compile_commands.json for clangd (requires `bear`)
+compdb:
+	bear -- $(MAKE) -B all
 
 $(BIN): $(OBJS)
 	$(CC) $(OBJS) -o $@ $(LDLIBS)
