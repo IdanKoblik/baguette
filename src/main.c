@@ -1,4 +1,6 @@
 #include <string.h>
+#include <unistd.h>
+#include <time.h>
 #include <wayland-client-protocol.h>
 #include <wayland-client.h>
 #include "hud.h"
@@ -35,6 +37,7 @@ int main(void) {
 
     state.width = 0;
     state.height = 0;
+    state.scale = 1;
 
     wl_registry_add_listener(registry, &registry_listener, &state);
     wl_display_roundtrip(display);
@@ -55,7 +58,26 @@ int main(void) {
 
     wl_display_roundtrip(display);
 
-    for (;;);
+    for (;;) {
+        time_t now = time(NULL);
+        struct tm tm;
+        localtime_r(&now, &tm);
+
+        char center[64];
+        strftime(center, sizeof(center), "%H:%M:%S", &tm);
+
+        char right[128];
+        strftime(right, sizeof(right), "%a %d %b", &tm);
+
+        hud_draw(&state, "baguette", center, right);
+
+        wl_surface_attach(state.surface, state.buffer, 0, 0);
+        wl_surface_damage_buffer(state.surface, 0, 0, state.width, state.height);
+        wl_surface_commit(state.surface);
+        wl_display_flush(display);
+
+        sleep(1);
+    }
 
     hud_state_destroy(&state);
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cairo/cairo.h>
 #include <wayland-client.h>
 #include "wlr-layer-shell-unstable-v1-protocol.h"
 
@@ -14,10 +15,16 @@ struct hud_state {
     struct wl_shm_pool *shm_pool;
     struct wl_buffer *buffer;
 
+    struct wl_output *output;
+    int32_t scale;
+
     struct wl_surface *surface;
     struct zwlr_layer_surface_v1 *layer_surface;
 
     uint32_t *pixels;
+
+    cairo_surface_t *cairo_surface;
+    cairo_t *cairo;
 
     uint32_t width;
     uint32_t height;
