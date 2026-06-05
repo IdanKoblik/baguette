@@ -1,11 +1,19 @@
+#include <string.h>
 #include <wayland-client-protocol.h>
 #include <wayland-client.h>
 #include "hud.h"
+#include "listeners/layer_surface.h"
 #include "listeners/global.h"
 #include "log.h"
+#include "ui.h"
+#include "wlr-layer-shell-unstable-v1-protocol.h"
 
 static struct wl_registry_listener registry_listener = {
     .global = registry_handle_global
+};
+
+static struct zwlr_layer_surface_v1_listener layer_surface_listener = {
+    .configure = layer_surface_handle
 };
 
 int main(void) {
@@ -23,15 +31,30 @@ int main(void) {
     }
 
     struct hud_state state;
+    memset(&state, 0, sizeof(state));
+
+    state.width = 0;
+    state.height = 0;
+
     wl_registry_add_listener(registry, &registry_listener, &state);
     wl_display_roundtrip(display);
 
-    if (init_hud_state(&state) < 0) {
-        ERROR("failed to init hud state.");
+    if (init_surface(&state) < 0) {
+        ERROR("failed to init hud surface.");
+        return 1;
+    }
+
+    zwlr_layer_surface_v1_add_listener(state.layer_surface, &layer_surface_listener, &state);
+
+    wl_display_roundtrip(display);
+
+    if (init_buffer(&state) < 0) {
+        ERROR("failed to init hud buffer.");
         return 1;
     }
 
     wl_display_roundtrip(display);
+
     for (;;);
 
     hud_state_destroy(&state);
