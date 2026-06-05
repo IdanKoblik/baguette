@@ -64,7 +64,7 @@ int main(void) {
         localtime_r(&now, &tm);
 
         char center[64];
-        strftime(center, sizeof(center), "%H:%M:%S", &tm);
+        strftime(center, sizeof(center), "%x - %H:%M:%S", &tm);
 
         char right[128];
         strftime(right, sizeof(right), "%a %d %b", &tm);
