@@ -10,15 +10,27 @@ SRCS := $(shell find $(SRC_DIR) -name '*.c')
 OBJS := $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SRCS))
 DEPS := $(OBJS:.o=.d)
 
-.PHONY: all clean run compdb
+PROTOCOLS := $(wildcard protocols/*.xml)
+
+GENERATED_HEADERS := $(PROTOCOLS:protocols/%.xml=src/%-protocol.h)
+GENERATED_SOURCES := $(PROTOCOLS:protocols/%.xml=src/%-protocol.c)
+
+.PHONY: all clean run compdb protocol
 
 all: $(BIN)
+
+protocol: $(GENERATED_HEADERS) $(GENERATED_SOURCES)
+src/%-protocol.h: protocols/%.xml
+	wayland-scanner client-header $< $@
+
+src/%-protocol.c: protocols/%.xml
+	wayland-scanner private-code $< $@
 
 # Generate compile_commands.json for clangd (requires `bear`)
 compdb:
 	bear -- $(MAKE) -B all
 
-$(BIN): $(OBJS)
+$(BIN): protocol $(OBJS)
 	$(CC) $(OBJS) -o $@ $(LDLIBS)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
@@ -29,6 +41,6 @@ run: $(BIN)
 	./$(BIN)
 
 clean:
-	rm -rf $(OBJ_DIR) $(BIN)
+	rm -rf $(OBJ_DIR) $(BIN) $(GENERATED_SOURCES) $(GENERATED_HEADERS)
 
 -include $(DEPS)

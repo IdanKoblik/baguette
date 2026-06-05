@@ -1,0 +1,18 @@
+#pragma once
+
+#include <wayland-client.h>
+#include "wlr-layer-shell-unstable-v1-protocol.h"
+
+#define HEIGHT 40
+#define NAMESPACE "IdanK/Baguette"
+
+struct hud_state {
+    struct wl_compositor *compositor;
+    struct zwlr_layer_shell_v1 *layer_shell;
+
+    struct wl_surface *surface;
+    struct zwlr_layer_surface_v1 *layer_surface;
+};
+
+int init_hud_state(struct hud_state *state);
+void hud_state_destroy(struct hud_state *state);

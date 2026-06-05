@@ -1,6 +1,7 @@
 CompileFlags:
   Add:
     - -std=c17
+    - -xc
     - -Wall
     - -Wextra
     - -D_POSIX_C_SOURCE=200809L

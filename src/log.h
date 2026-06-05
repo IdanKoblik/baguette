@@ -16,6 +16,9 @@
         fprintf(stderr, "[%s %s:%d] " fmt "\n", _buf, __FILE__, __LINE__, ##__VA_ARGS__); \
     } while (0)
 
+#define INFO(fmt, ...) \
+    LOG("[INFO] " fmt, ##__VA_ARGS__)
+
 #define ERROR(fmt, ...) \
     do { \
         int _err = errno; \
@@ -24,5 +27,8 @@
 
 #define WARN(fmt, ...) \
     LOG("[WARN] " fmt, ##__VA_ARGS__)
+
+#define DEBUG(fmt, ...) \
+    LOG("[DEBUG] " fmt, ##__VA_ARGS__)
 
 #endif // LOG_H_

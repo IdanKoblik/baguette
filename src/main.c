@@ -1,16 +1,11 @@
+#include <wayland-client-protocol.h>
 #include <wayland-client.h>
+#include "hud.h"
+#include "listeners/global.h"
 #include "log.h"
 
-void create_global_object(void *data, struct wl_registry *wl_registry, uint32_t name, const char *interface, uint32_t version) {
-    // Ignore compiler warning
-    (void)!data;
-    (void)!wl_registry;
-
-    LOG("%d, %s, %d", name, interface, version);
-}
-
 static struct wl_registry_listener registry_listener = {
-    .global = create_global_object
+    .global = registry_handle_global
 };
 
 int main(void) {
@@ -20,16 +15,28 @@ int main(void) {
         return 1;
     }
 
-    LOG("Success: Connected to the Wayland display successfully!");
+    INFO("Success: Connected to the Wayland display successfully!");
     struct wl_registry *registry = wl_display_get_registry(display);
     if (!registry) {
         ERROR("Failed to get display registry.");
         return 1;
     }
 
-    wl_registry_add_listener(registry, &registry_listener, NULL);
+    struct hud_state state;
+    wl_registry_add_listener(registry, &registry_listener, &state);
     wl_display_roundtrip(display);
 
+    if (init_hud_state(&state) < 0) {
+        ERROR("failed to init hud state.");
+        return 1;
+    }
+
+    wl_display_roundtrip(display);
+    for (;;);
+
+    hud_state_destroy(&state);
+
+    wl_registry_destroy(registry);
     wl_display_disconnect(display);
     return 0;
 }
