@@ -130,7 +130,7 @@ void hud_draw(struct hud_state *state, const char *left, const char *center, con
 
     cairo_set_source_rgb(cr, 0.54, 0.66, 0.92); // TODO config
     cairo_select_font_face(cr, "JetbrainsMono Nerd Font", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
-    cairo_set_font_size(cr, 14); // TODO config
+    cairo_set_font_size(cr, 13); // TODO config
 
     cairo_font_options_t *fo = cairo_font_options_create();
     cairo_font_options_set_antialias(fo, CAIRO_ANTIALIAS_GRAY);
