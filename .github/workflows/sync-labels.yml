@@ -17,21 +17,54 @@ jobs:
             const fs = require('fs');
             const labels = JSON.parse(fs.readFileSync('.github/labels.json', 'utf8'));
             
+            const existingLabels = await github.paginate(github.rest.issues.listLabels, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              per_page: 100
+            });
+            
+            const newLabelNames = new Set(labels.map(l => l.name.toLowerCase()));
+            
+            for (const existingLabel of existingLabels) {
+              if (!newLabelNames.has(existingLabel.name.toLowerCase())) {
+                try {
+                  await github.rest.issues.deleteLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    name: existingLabel.name
+                  });
+                  console.log(`Deleted label: ${existingLabel.name}`);
+                } catch (error) {
+                  console.log(`Failed to delete label ${existingLabel.name}: ${error.message}`);
+                }
+              }
+            }
+            
             for (const label of labels) {
               try {
-                await github.rest.issues.createLabel({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  name: label.name,
-                  color: label.color,
-                  description: label.description
-                });
-                console.log(`Created label: ${label.name}`);
-              } catch (error) {
-                if (error.status === 422) {
-                  console.log(`Label ${label.name} already exists, skipping...`);
+                const existingLabel = existingLabels.find(l => l.name.toLowerCase() === label.name.toLowerCase());
+                
+                if (existingLabel) {
+                  await github.rest.issues.updateLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    name: existingLabel.name,
+                    new_name: label.name,
+                    color: label.color,
+                    description: label.description
+                  });
+                  console.log(`Updated label: ${label.name}`);
                 } else {
-                  throw error;
+                  await github.rest.issues.createLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    name: label.name,
+                    color: label.color,
+                    description: label.description
+                  });
+                  console.log(`Created label: ${label.name}`);
                 }
+              } catch (error) {
+                console.log(`Error processing label ${label.name}: ${error.message}`);
               }
             }
