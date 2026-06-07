@@ -9,41 +9,98 @@ on:
 jobs:
   sync:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/github-script@v6
+      - uses: actions/checkout@v4
+
+      - uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
-            const labels = JSON.parse(fs.readFileSync('.github/labels.json', 'utf8'));
-            
-            const existingLabels = await github.paginate(github.rest.issues.listLabels, {
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              per_page: 100
-            });
-            
-            const newLabelNames = new Set(labels.map(l => l.name.toLowerCase()));
-            
+
+            // Read labels file
+            const labels = JSON.parse(
+              fs.readFileSync('.github/labels.json', 'utf8')
+            );
+
+            if (!Array.isArray(labels)) {
+              throw new Error(
+                '.github/labels.json must contain an array of label objects'
+              );
+            }
+
+            // Validate labels
+            for (const [index, label] of labels.entries()) {
+              if (!label || typeof label !== 'object') {
+                throw new Error(
+                  `Label at index ${index} is not a valid object`
+                );
+              }
+
+              if (
+                typeof label.name !== 'string' ||
+                label.name.trim() === ''
+              ) {
+                throw new Error(
+                  `Label at index ${index} is missing a valid "name" field: ${JSON.stringify(label)}`
+                );
+              }
+
+              if (
+                typeof label.color !== 'string' ||
+                !/^[0-9a-fA-F]{6}$/.test(label.color)
+              ) {
+                throw new Error(
+                  `Label "${label.name}" has an invalid "color" field. Expected a 6-character hex code without '#'.`
+                );
+              }
+            }
+
+            // Fetch existing labels from GitHub
+            const existingLabels = await github.paginate(
+              github.rest.issues.listLabelsForRepo,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                per_page: 100,
+              }
+            );
+
+            const newLabelNames = new Set(
+              labels.map(label => label.name.toLowerCase())
+            );
+
+            // Delete labels that no longer exist in labels.json
             for (const existingLabel of existingLabels) {
-              if (!newLabelNames.has(existingLabel.name.toLowerCase())) {
+              if (
+                existingLabel.name &&
+                !newLabelNames.has(existingLabel.name.toLowerCase())
+              ) {
                 try {
                   await github.rest.issues.deleteLabel({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
-                    name: existingLabel.name
+                    name: existingLabel.name,
                   });
+
                   console.log(`Deleted label: ${existingLabel.name}`);
                 } catch (error) {
-                  console.log(`Failed to delete label ${existingLabel.name}: ${error.message}`);
+                  console.log(
+                    `Failed to delete label "${existingLabel.name}": ${error.message}`
+                  );
                 }
               }
             }
-            
+
+            // Create or update labels
             for (const label of labels) {
               try {
-                const existingLabel = existingLabels.find(l => l.name.toLowerCase() === label.name.toLowerCase());
-                
+                const existingLabel = existingLabels.find(
+                  l =>
+                    l.name &&
+                    l.name.toLowerCase() === label.name.toLowerCase()
+                );
+
                 if (existingLabel) {
                   await github.rest.issues.updateLabel({
                     owner: context.repo.owner,
@@ -51,8 +108,9 @@ jobs:
                     name: existingLabel.name,
                     new_name: label.name,
                     color: label.color,
-                    description: label.description
+                    description: label.description || '',
                   });
+
                   console.log(`Updated label: ${label.name}`);
                 } else {
                   await github.rest.issues.createLabel({
@@ -60,11 +118,16 @@ jobs:
                     repo: context.repo.repo,
                     name: label.name,
                     color: label.color,
-                    description: label.description
+                    description: label.description || '',
                   });
+
                   console.log(`Created label: ${label.name}`);
                 }
               } catch (error) {
-                console.log(`Error processing label ${label.name}: ${error.message}`);
+                console.log(
+                  `Error processing label "${label.name}": ${error.message}`
+                );
               }
             }
+
+            console.log('Label synchronization completed.');
