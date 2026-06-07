@@ -19,6 +19,7 @@ GENERATED_SOURCES := $(PROTOCOLS:protocols/%.xml=src/%-protocol.c)
 
 all: $(BIN)
 
+# Requires wayland-scanner package
 protocol: $(GENERATED_HEADERS) $(GENERATED_SOURCES)
 src/%-protocol.h: protocols/%.xml
 	wayland-scanner client-header $< $@
