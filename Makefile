@@ -12,8 +12,8 @@ DEPS := $(OBJS:.o=.d)
 
 PROTOCOLS := $(wildcard protocols/*.xml)
 
-GENERATED_HEADERS := $(PROTOCOLS:protocols/%.xml=src/%-protocol.h)
-GENERATED_SOURCES := $(PROTOCOLS:protocols/%.xml=src/%-protocol.c)
+GENERATED_HEADERS := $(PROTOCOLS:protocols/%.xml=src/wayland/protocols/%-protocol.h)
+GENERATED_SOURCES := $(PROTOCOLS:protocols/%.xml=src/wayland/protocols/%-protocol.c)
 
 .PHONY: all clean run compdb protocol
 
@@ -21,10 +21,10 @@ all: $(BIN)
 
 # Requires wayland-scanner package
 protocol: $(GENERATED_HEADERS) $(GENERATED_SOURCES)
-src/%-protocol.h: protocols/%.xml
+src/wayland/protocols/%-protocol.h: protocols/%.xml
 	wayland-scanner client-header $< $@
 
-src/%-protocol.c: protocols/%.xml
+src/wayland/protocols/%-protocol.c: protocols/%.xml
 	wayland-scanner private-code $< $@
 
 # Generate compile_commands.json for clangd (requires `bear`)
