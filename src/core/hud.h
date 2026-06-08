@@ -1,8 +1,6 @@
 #pragma once
 
-#include <wayland-client-protocol.h>
 #include <wayland-client.h>
-#include "../wayland/protocols/wlr-layer-shell-unstable-v1-protocol.h"
 
 #define NAMESPACE "IdanK/Baguette"
 

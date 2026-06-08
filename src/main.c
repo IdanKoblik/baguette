@@ -1,5 +1,6 @@
 #include "core/hud.h"
 #include "util/log.h"
+#include "wayland/listeners/global.h"
 #include <wayland-client-core.h>
 
 int main(int argc, char **argv) {
@@ -26,6 +27,8 @@ int main(int argc, char **argv) {
         ERROR("failed to init hud state.");
         return -1;
     }
+
+    wl_registry_add_listener(state.registry, &registry_listener, &state);
 
     if (hud_state_destroy(&state) < 0)
         ERROR("failed to destory hud state");
