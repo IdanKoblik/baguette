@@ -1,8 +1,10 @@
 #include "hud.h"
 #include "../util/log.h"
+#include "surface.h"
+#include <wayland-client-core.h>
 #include <wayland-client-protocol.h>
 
-int hud_state_init(struct hud_state *state, struct wl_registry *registry) {
+int hud_state_init(struct hud_state *state, struct wl_registry *registry, struct wl_display *display) {
     if (!state) {
         ERROR("Cannot init hud state -> null.");
         return -1;
@@ -13,10 +15,31 @@ int hud_state_init(struct hud_state *state, struct wl_registry *registry) {
         return -1;
     }
 
+    if (!display) {
+        ERROR("Cannot init hud_state, display -> null.");
+        return -1;
+    }
+
     memset(state, 0, sizeof(*state));
+    state->display = display;
     state->registry = registry;
     state->compositor = NULL;
 
+    return 0;
+}
+
+int hud_state_active(struct hud_state *state) {
+    if (!state) {
+        ERROR("Cannot activate hud state -> null.");
+        return -1;
+    }
+
+    if (init_surface(state) < 0) {
+        ERROR("Cannot init hud surface.");
+        return -1;
+    }
+
+    wl_display_roundtrip(state->display);
     return 0;
 }
 
@@ -32,6 +55,9 @@ int hud_state_destroy(struct hud_state *state) {
 
     if (state->registry)
         wl_registry_destroy(state->registry);
+
+    if (state->display)
+        wl_display_disconnect(state->display);
 
     return 0;
 }

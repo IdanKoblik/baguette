@@ -23,16 +23,20 @@ int main(int argc, char **argv) {
 
     INFO("Success: Connected to the display registry successfully!");
     struct hud_state state;
-    if (hud_state_init(&state, registry) < 0) {
+    if (hud_state_init(&state, registry, display) < 0) {
         ERROR("failed to init hud state.");
         return -1;
     }
 
     wl_registry_add_listener(state.registry, &registry_listener, &state);
+    wl_display_roundtrip(display); // Roundtrip 1: Gets globals (compositor, etc..)
+
+    hud_state_active(&state);
+
+    for (;;) {}
 
     if (hud_state_destroy(&state) < 0)
         ERROR("failed to destory hud state");
 
-    wl_display_disconnect(display);
     return 0;
 }
