@@ -4,8 +4,14 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
+#include <syslog.h>
 #include <unistd.h>
 
+// The log macros emit via syslog(). LOG_PERROR makes syslog also echo each
+// message to stderr, which lets us capture and assert on it here. The stderr
+// echo is "<ident>[pid]: <message>" — note it carries neither the syslog
+// priority level (INFO/WARN/...) nor the syslog timestamp, only the message
+// the macro built (which embeds [__FILE__:__LINE__]).
 #define CAPTURE_STDERR(buf, stmt)                       \
     do {                                                \
         char _path[] = "/tmp/baguette_log_XXXXXX";      \
@@ -24,19 +30,17 @@
         unlink(_path);                                  \
     } while (0)
 
-TEST log_info_tag_and_message(void) {
+TEST log_info_message(void) {
     char buf[512];
     CAPTURE_STDERR(buf, INFO("hello %d", 42));
-    ASSERT(strstr(buf, "[INFO]") != NULL);
     ASSERT(strstr(buf, "hello 42") != NULL);
     PASS();
 }
 
-TEST log_includes_location_and_timestamp(void) {
+TEST log_includes_location(void) {
     char buf[512];
     CAPTURE_STDERR(buf, INFO("x"));
-    ASSERT(strstr(buf, "test_log.c:") != NULL); // __FILE__:__LINE__
-    ASSERT(strstr(buf, "20") != NULL);          // year in the timestamp
+    ASSERT(strstr(buf, "test_log.c:") != NULL); // [__FILE__:__LINE__]
     ASSERT(buf[strlen(buf) - 1] == '\n');       // newline-terminated
     PASS();
 }
@@ -45,21 +49,18 @@ TEST log_error_appends_errno(void) {
     char buf[512];
     errno = EINVAL;
     CAPTURE_STDERR(buf, ERROR("boom"));
-    ASSERT(strstr(buf, "[ERROR]") != NULL);
     ASSERT(strstr(buf, "boom") != NULL);
     ASSERT(strstr(buf, "errno=22") != NULL);
     ASSERT(strstr(buf, strerror(EINVAL)) != NULL);
     PASS();
 }
 
-TEST log_warn_and_debug_tags(void) {
+TEST log_warn_and_debug_messages(void) {
     char buf[512];
     CAPTURE_STDERR(buf, WARN("careful"));
-    ASSERT(strstr(buf, "[WARN]") != NULL);
     ASSERT(strstr(buf, "careful") != NULL);
 
     CAPTURE_STDERR(buf, DEBUG("trace %s", "here"));
-    ASSERT(strstr(buf, "[DEBUG]") != NULL);
     ASSERT(strstr(buf, "trace here") != NULL);
     PASS();
 }
@@ -72,9 +73,14 @@ TEST log_no_varargs(void) {
 }
 
 SUITE(log_suite) {
-    RUN_TEST(log_info_tag_and_message);
-    RUN_TEST(log_includes_location_and_timestamp);
+    // Route syslog to stderr (and tag it) so CAPTURE_STDERR can observe output.
+    openlog("baguette_test", LOG_PERROR, LOG_USER);
+    // DEBUG is at LOG_DEBUG priority; without this it may be filtered out.
+    setlogmask(LOG_UPTO(LOG_DEBUG));
+    RUN_TEST(log_info_message);
+    RUN_TEST(log_includes_location);
     RUN_TEST(log_error_appends_errno);
-    RUN_TEST(log_warn_and_debug_tags);
+    RUN_TEST(log_warn_and_debug_messages);
     RUN_TEST(log_no_varargs);
+    closelog();
 }
