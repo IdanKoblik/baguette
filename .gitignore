@@ -3,6 +3,7 @@ baguette
 build/
 coverage/
 compile_commands.json
+baguette.log
 
 # Coverage data
 *.gcno
