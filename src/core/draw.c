@@ -1,17 +1,64 @@
 #include "draw.h"
 #include "../util/log.h"
 #include <cairo/cairo.h>
+#include <math.h>
 
-static void draw_section(struct hud_state *state, const char *text, double x) {
+// Per-section "pill" geometry, mirroring the waybar modules:
+// (waybar modules: padding 0.5rem 1rem, margin 5px 0, border-radius 5px)
+#define PILL_RADIUS 5
+#define PILL_VMARGIN 5 // top/bottom gap from the bar edges (waybar: margin 5px 0)
+#define PILL_PAD_X 16  // horizontal padding inside the pill (waybar: 1rem)
+
+enum hud_align { HUD_LEFT, HUD_CENTER, HUD_RIGHT };
+
+static void rounded_rect(cairo_t *cr, double x, double y, double w, double h, double r) {
+    double deg = M_PI / 180.0;
+    cairo_new_sub_path(cr);
+    cairo_arc(cr, x + w - r, y + r,     r, -90 * deg,   0 * deg);
+    cairo_arc(cr, x + w - r, y + h - r, r,   0 * deg,  90 * deg);
+    cairo_arc(cr, x + r,     y + h - r, r,  90 * deg, 180 * deg);
+    cairo_arc(cr, x + r,     y + r,     r, 180 * deg, 270 * deg);
+    cairo_close_path(cr);
+}
+
+static void draw_section(struct hud_state *state, const char *text, enum hud_align align,
+                         double tr, double tg, double tb) {
     if (!text || !*text)
         return;
 
-    cairo_text_extents_t te;
-    cairo_text_extents(state->cairo, text, &te);
-    double y = (state->height - te.height) / 2 - te.y_bearing;
+    cairo_t *cr = state->cairo;
 
-    cairo_move_to(state->cairo, x - te.x_bearing, y);
-    cairo_show_text(state->cairo, text);
+    cairo_text_extents_t te;
+    cairo_text_extents(cr, text, &te);
+
+    // Pill wraps the text ink plus horizontal padding, vertically inset from
+    // the bar edges so it reads as a floating module like waybar. All geometry
+    // is rounded to whole pixels: drawing on fractional coordinates makes Cairo
+    // antialias glyph and pill edges across pixel boundaries, which reads as
+    // blurry/heavy text. Snapping to the grid keeps it crisp like pango/waybar.
+    double box_w = round(te.width + 2 * PILL_PAD_X);
+    double box_y = PILL_VMARGIN;
+    double box_h = state->height - 2 * PILL_VMARGIN;
+    double box_x;
+    switch (align) {
+        case HUD_LEFT:   box_x = HUD_PADDING; break;
+        case HUD_CENTER: box_x = round((state->width - box_w) / 2); break;
+        case HUD_RIGHT:  box_x = state->width - HUD_PADDING - box_w; break;
+        default:         box_x = HUD_PADDING; break;
+    }
+
+    // Pill background (#101010).
+    cairo_set_source_rgb(cr, 0.063, 0.063, 0.063); // TODO config
+    rounded_rect(cr, box_x, box_y, box_w, box_h, PILL_RADIUS);
+    cairo_fill(cr);
+
+    // Text, centred vertically in the bar and padded inside the pill. The pen
+    // origin is snapped to whole pixels so glyphs land on the grid.
+    double text_x = round(box_x + PILL_PAD_X - te.x_bearing);
+    double text_y = round((state->height - te.height) / 2 - te.y_bearing);
+    cairo_set_source_rgb(cr, tr, tg, tb);
+    cairo_move_to(cr, text_x, text_y);
+    cairo_show_text(cr, text);
 }
 
 void draw_hud(struct hud_state *state, const char *left, const char *center, const char *right) {
@@ -22,13 +69,16 @@ void draw_hud(struct hud_state *state, const char *left, const char *center, con
 
     cairo_t *cr = state->cairo;
 
-    // Background color.
-    cairo_set_source_rgb(cr, 0.063, 0.063, 0.063); // TODO config
+    // Transparent background (waybar: background: transparent). SOURCE operator
+    // overwrites the previous frame's pixels rather than blending over them.
+    cairo_save(cr);
+    cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+    cairo_set_source_rgba(cr, 0, 0, 0, 0);
     cairo_paint(cr);
+    cairo_restore(cr);
 
-    cairo_set_source_rgb(cr, 0.54, 0.66, 0.92); // TODO config
     cairo_select_font_face(cr, "JetbrainsMono Nerd Font", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
-    cairo_set_font_size(cr, 13); // TODO config
+    cairo_set_font_size(cr, 14); // TODO config
 
     cairo_font_options_t *fo = cairo_font_options_create();
     cairo_font_options_set_antialias(fo, CAIRO_ANTIALIAS_GRAY);
@@ -37,22 +87,9 @@ void draw_hud(struct hud_state *state, const char *left, const char *center, con
     cairo_set_font_options(cr, fo);
     cairo_font_options_destroy(fo);
 
-    // Left: anchored to the left edge with padding.
-    draw_section(state, left, HUD_PADDING);
-
-    // Center: ink box centred on the bar's width.
-    if (center && *center) {
-        cairo_text_extents_t te;
-        cairo_text_extents(cr, center, &te);
-        draw_section(state, center, (state->width - te.width) / 2);
-    }
-
-    // Right: anchored to the right edge with padding.
-    if (right && *right) {
-        cairo_text_extents_t te;
-        cairo_text_extents(cr, right, &te);
-        draw_section(state, right, state->width - HUD_PADDING - te.width);
-    }
+    draw_section(state, left,   HUD_LEFT,   0.729, 0.733, 0.945); // #babbf1
+    draw_section(state, center, HUD_CENTER, 0.549, 0.667, 0.933); // #8caaee
+    draw_section(state, right,  HUD_RIGHT,  0.776, 0.816, 0.961); // #c6d0f5
 
     cairo_surface_flush(state->cairo_surface);
 }

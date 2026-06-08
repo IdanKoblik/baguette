@@ -1,4 +1,5 @@
 #include "core/hud.h"
+#include "core/buffer.h"
 #include "util/log.h"
 #include "wayland/listeners/global.h"
 #include "core/draw.h"
@@ -53,8 +54,16 @@ int main(int argc, char **argv) {
     signal(SIGTERM, handle_signal);
 
     while (running) {
-        char temp[64];
-        draw_hud(&state, "baguette", temp, temp);
+        wl_display_roundtrip(display);
+        int want_scale = state.scale > 0 ? state.scale : 1;
+        if (want_scale != state.rendered_scale) {
+            INFO("rescaling buffer: %d -> %d", state.rendered_scale, want_scale);
+            if (init_buffer(&state) < 0)
+                ERROR("failed to rebuild buffer on rescale.");
+        }
+
+        // TODO fix (issue #2)
+        draw_hud(&state, "baguette", "01/11/2026 - 21:21:21", "baguette");
 
         wl_surface_attach(state.surface, state.buffer, 0, 0);
         wl_surface_damage_buffer(state.surface, 0, 0, state.width, state.height);

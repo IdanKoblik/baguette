@@ -5,7 +5,7 @@
 #include <wayland-client.h>
 #include "../wayland/protocols/wlr-layer-shell-unstable-v1-protocol.h"
 
-#define HEIGHT 40 // px
+#define HEIGHT 43 // px
 #define NAMESPACE "IdanK/Baguette"
 
 struct hud_state {
@@ -26,7 +26,9 @@ struct hud_state {
     int height;
     int width;
 
-    int32_t scale;
+    int32_t scale;          // scale advertised by the compositor (0 until known)
+    int32_t rendered_scale; // scale the current buffer was actually built at
+    size_t map_size;
     uint32_t *pixels;
 
     cairo_surface_t *cairo_surface;

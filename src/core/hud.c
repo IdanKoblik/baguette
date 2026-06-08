@@ -65,10 +65,8 @@ int hud_state_destroy(struct hud_state *state) {
     if (state->cairo_surface)
         cairo_surface_destroy(state->cairo_surface);
 
-    if (state->pixels) {
-        int scale = state->scale > 0 ? state->scale : 1;
-        munmap(state->pixels, (state->width * scale) * (state->height * scale) * sizeof(uint32_t));
-    }
+    if (state->pixels && state->map_size)
+        munmap(state->pixels, state->map_size);
 
     if (state->layer_shell)
         zwlr_layer_shell_v1_destroy(state->layer_shell);
