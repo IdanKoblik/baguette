@@ -4,6 +4,7 @@
 #include "wayland/listeners/global.h"
 #include "core/draw.h"
 #include <signal.h>
+#include <string.h>
 #include <sys/syslog.h>
 #include <unistd.h>
 
@@ -15,9 +16,14 @@ static void handle_signal(int signum) {
 }
 
 int main(int argc, char **argv) {
-    // Hide compile warning
-    (void)!argc;
-    (void)!argv;
+    // Layout style: separated pills by default, full-width background with --full.
+    enum hud_style style = HUD_STYLE_SEPARATED;
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "--full") == 0)
+            style = HUD_STYLE_FULL;
+        else if (strcmp(argv[i], "--separated") == 0)
+            style = HUD_STYLE_SEPARATED;
+    }
 
     openlog(NULL, LOG_PID | LOG_PERROR, LOG_USER);
 
@@ -40,6 +46,7 @@ int main(int argc, char **argv) {
         ERROR("failed to init hud state.");
         return -1;
     }
+    state.style = style;
 
     wl_registry_add_listener(state.registry, &registry_listener, &state);
     wl_display_roundtrip(display); // Roundtrip 1: Gets globals (compositor, etc..)

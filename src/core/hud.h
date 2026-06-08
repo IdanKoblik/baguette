@@ -8,6 +8,11 @@
 #define HEIGHT 43 // px
 #define NAMESPACE "IdanK/Baguette"
 
+enum hud_style {
+    HUD_STYLE_SEPARATED,
+    HUD_STYLE_FULL,
+};
+
 struct hud_state {
     struct wl_display *display;
     struct wl_compositor *compositor;
@@ -33,6 +38,8 @@ struct hud_state {
 
     cairo_surface_t *cairo_surface;
     cairo_t *cairo;
+
+    enum hud_style style;
 };
 
 int hud_state_init(struct hud_state *state, struct wl_registry *registry, struct wl_display *display);

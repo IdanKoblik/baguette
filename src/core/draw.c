@@ -21,8 +21,24 @@ static void rounded_rect(cairo_t *cr, double x, double y, double w, double h, do
     cairo_close_path(cr);
 }
 
+// One continuous background pill spanning the whole bar (HUD_STYLE_FULL).
+static void draw_full_background(struct hud_state *state) {
+    cairo_t *cr = state->cairo;
+    double x = HUD_PADDING;
+    double y = PILL_VMARGIN;
+    double w = state->width - 2 * HUD_PADDING;
+    double h = state->height - 2 * PILL_VMARGIN;
+
+    cairo_set_source_rgb(cr, 0.063, 0.063, 0.063); // #101010, TODO config
+    rounded_rect(cr, x, y, w, h, PILL_RADIUS);
+    cairo_fill(cr);
+}
+
+// Draw one section. With pill=true it gets its own floating background
+// (HUD_STYLE_SEPARATED); with pill=false only the text is drawn, on top of the
+// shared full-width background (HUD_STYLE_FULL).
 static void draw_section(struct hud_state *state, const char *text, enum hud_align align,
-                         double tr, double tg, double tb) {
+                         int pill, double tr, double tg, double tb) {
     if (!text || !*text)
         return;
 
@@ -47,10 +63,12 @@ static void draw_section(struct hud_state *state, const char *text, enum hud_ali
         default:         box_x = HUD_PADDING; break;
     }
 
-    // Pill background (#101010).
-    cairo_set_source_rgb(cr, 0.063, 0.063, 0.063); // TODO config
-    rounded_rect(cr, box_x, box_y, box_w, box_h, PILL_RADIUS);
-    cairo_fill(cr);
+    // Per-section pill background (#101010), only in separated mode.
+    if (pill) {
+        cairo_set_source_rgb(cr, 0.063, 0.063, 0.063); // TODO config
+        rounded_rect(cr, box_x, box_y, box_w, box_h, PILL_RADIUS);
+        cairo_fill(cr);
+    }
 
     // Text, centred vertically in the bar and padded inside the pill. The pen
     // origin is snapped to whole pixels so glyphs land on the grid.
@@ -87,9 +105,15 @@ void draw_hud(struct hud_state *state, const char *left, const char *center, con
     cairo_set_font_options(cr, fo);
     cairo_font_options_destroy(fo);
 
-    draw_section(state, left,   HUD_LEFT,   0.729, 0.733, 0.945); // #babbf1
-    draw_section(state, center, HUD_CENTER, 0.549, 0.667, 0.933); // #8caaee
-    draw_section(state, right,  HUD_RIGHT,  0.776, 0.816, 0.961); // #c6d0f5
+    // Full mode paints a single background spanning the bar; separated mode
+    // gives each section its own pill (drawn inside draw_section).
+    int pill = (state->style != HUD_STYLE_FULL);
+    if (!pill)
+        draw_full_background(state);
+
+    draw_section(state, left,   HUD_LEFT,   pill, 0.729, 0.733, 0.945); // #babbf1
+    draw_section(state, center, HUD_CENTER, pill, 0.549, 0.667, 0.933); // #8caaee
+    draw_section(state, right,  HUD_RIGHT,  pill, 0.776, 0.816, 0.961); // #c6d0f5
 
     cairo_surface_flush(state->cairo_surface);
 }
