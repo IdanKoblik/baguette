@@ -5,6 +5,7 @@ LDLIBS  := $(shell pkg-config --libs wayland-client cairo)
 SRC_DIR := src
 OBJ_DIR := build
 BIN     := baguette
+LOG     := baguette.log
 
 SRCS := $(shell find $(SRC_DIR) -name '*.c')
 OBJS := $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SRCS))
@@ -27,7 +28,7 @@ COV_OBJ  := $(COV_DIR)/obj
 COV_SRCS := $(filter-out $(SRC_DIR)/main.c,$(SRCS)) $(TEST_SRCS)
 COV_OBJS := $(COV_SRCS:%.c=$(COV_OBJ)/%.o)
 
-.PHONY: all clean run compdb protocol test coverage
+.PHONY: all clean run compdb protocol test coverage logs
 
 all: $(BIN)
 
@@ -53,6 +54,11 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 run: $(BIN)
 	./$(BIN)
 
+# Export this app's journald logs to a greppable file
+logs:
+	journalctl -t $(BIN) -o short-iso > $(LOG)
+	@echo "Logs written to $(LOG)"
+
 test: protocol $(TEST_OBJS) $(TEST_SRCS)
 	$(CC) $(CFLAGS) -I$(TEST_DIR) $(TEST_SRCS) $(TEST_OBJS) -o $(TEST_BIN) $(LDLIBS)
 	./$(TEST_BIN)
@@ -71,6 +77,6 @@ $(COV_OBJ)/%.o: %.c
 	$(CC) $(CFLAGS) -I$(TEST_DIR) --coverage -c $< -o $@
 
 clean:
-	rm -rf $(OBJ_DIR) $(BIN) $(COV_DIR) $(GENERATED_SOURCES) $(GENERATED_HEADERS)
+	rm -rf $(OBJ_DIR) $(BIN) $(LOG) $(COV_DIR) $(GENERATED_SOURCES) $(GENERATED_HEADERS)
 
 -include $(DEPS)

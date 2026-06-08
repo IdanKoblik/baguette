@@ -4,6 +4,7 @@
 #include <string.h>
 #include <errno.h>
 #include <stdio.h>
+#include <syslog.h>
 
 #define LOG(fmt, ...) \
     do { \
@@ -15,18 +16,27 @@
         fprintf(stderr, "[%s %s:%d] " fmt "\n", _buf, __FILE__, __LINE__, ##__VA_ARGS__); \
     } while (0)
 
+// WTF
+#define STR2(A) #A
+#define STR(A) STR2(A)
+
 #define INFO(fmt, ...) \
-    LOG("[INFO] " fmt, ##__VA_ARGS__)
+    do { \
+        syslog(LOG_INFO, "[" __FILE__ ":" STR(__LINE__) "]: " fmt, ##__VA_ARGS__); \
+    } while (0)
 
 #define ERROR(fmt, ...) \
     do { \
         int _err = errno; \
-        LOG("[ERROR] " fmt " (errno=%d: %s)", ##__VA_ARGS__, _err, strerror(_err)); \
+        syslog(LOG_ERR, "[" __FILE__ ":" STR(__LINE__) "]: " fmt " (errno=%d: %s)", ##__VA_ARGS__, _err, strerror(_err)); \
     } while (0)
 
 #define WARN(fmt, ...) \
-    LOG("[WARN] " fmt, ##__VA_ARGS__)
+    do { \
+        syslog(LOG_WARNING, "[" __FILE__ ":" STR(__LINE__) "]: " fmt, ##__VA_ARGS__); \
+    } while (0)
 
 #define DEBUG(fmt, ...) \
-    LOG("[DEBUG] " fmt, ##__VA_ARGS__)
-
+    do { \
+        syslog(LOG_DEBUG, "[" __FILE__ ":" STR(__LINE__) "]: " fmt, ##__VA_ARGS__); \
+    } while (0)
