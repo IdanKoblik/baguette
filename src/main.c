@@ -1,6 +1,7 @@
 #include "core/hud.h"
 #include "util/log.h"
 #include "wayland/listeners/global.h"
+#include "core/draw.h"
 
 int main(int argc, char **argv) {
     // Hide compile warning
@@ -32,7 +33,15 @@ int main(int argc, char **argv) {
 
     hud_state_active(&state);
 
-    for (;;) {}
+    for (;;) {
+        char temp[64];
+        draw_hud(&state, "baguette", temp, temp);
+
+        wl_surface_attach(state.surface, state.buffer, 0, 0);
+        wl_surface_damage_buffer(state.surface, 0, 0, state.width, state.height);
+        wl_surface_commit(state.surface);
+        wl_display_flush(display);
+    }
 
     if (hud_state_destroy(&state) < 0)
         ERROR("failed to destory hud state");
