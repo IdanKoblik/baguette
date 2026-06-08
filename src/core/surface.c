@@ -25,7 +25,7 @@ int init_surface(struct hud_state *state) {
     }
 
     state->layer_surface = layer_surface;
-    zwlr_layer_surface_v1_add_listener(state->layer_surface, &layer_surface_listener, &state);
+    zwlr_layer_surface_v1_add_listener(state->layer_surface, &layer_surface_listener, state);
 
     zwlr_layer_surface_v1_set_anchor(layer_surface, ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP | ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT | ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT);
 

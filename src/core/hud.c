@@ -20,9 +20,7 @@ int hud_state_init(struct hud_state *state, struct wl_registry *registry, struct
         return -1;
     }
 
-    //memset(state, 0, sizeof(*state));
-    state->width = 0;
-    state->height = 0;
+    memset(state, 0, sizeof(*state));
     state->display = display;
     state->registry = registry;
 

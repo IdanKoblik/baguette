@@ -13,7 +13,6 @@ void layer_surface_handle(void *data, struct zwlr_layer_surface_v1 *zwlr_layer_s
     }
 
     struct hud_state *state = (struct hud_state *)data;
-    DEBUG("%d, %d", state->height, state->width);
     if (state->height == 0)
         state->height = height;
 

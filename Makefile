@@ -1,5 +1,5 @@
 CC      := cc
-CFLAGS  := -Wall -Wextra -pedantic -std=c17 -D_POSIX_C_SOURCE=200809L -Isrc $(shell pkg-config --cflags wayland-client cairo)
+CFLAGS  := -Wall -Wextra -std=c17 -D_POSIX_C_SOURCE=200809L -Isrc $(shell pkg-config --cflags wayland-client cairo)
 LDLIBS  := $(shell pkg-config --libs wayland-client cairo)
 
 SRC_DIR := src
