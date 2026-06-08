@@ -35,6 +35,7 @@ int hud_state_active(struct hud_state *state) {
         return -1;
     }
 
+    INFO("activating hud state.");
     if (init_surface(state) < 0) {
         ERROR("Cannot init hud surface.");
         return -1;

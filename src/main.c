@@ -2,6 +2,7 @@
 #include "util/log.h"
 #include "wayland/listeners/global.h"
 #include "core/draw.h"
+#include <unistd.h>
 
 int main(int argc, char **argv) {
     // Hide compile warning
@@ -31,8 +32,12 @@ int main(int argc, char **argv) {
     wl_registry_add_listener(state.registry, &registry_listener, &state);
     wl_display_roundtrip(display); // Roundtrip 1: Gets globals (compositor, etc..)
 
-    hud_state_active(&state);
+    if (hud_state_active(&state) < 0) {
+        ERROR("failed to activate hud.");
+        return -1;
+    }
 
+    INFO("Success: Loaded hud successfully!");
     for (;;) {
         char temp[64];
         draw_hud(&state, "baguette", temp, temp);
@@ -41,6 +46,8 @@ int main(int argc, char **argv) {
         wl_surface_damage_buffer(state.surface, 0, 0, state.width, state.height);
         wl_surface_commit(state.surface);
         wl_display_flush(display);
+
+        sleep(1);
     }
 
     if (hud_state_destroy(&state) < 0)
