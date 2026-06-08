@@ -16,6 +16,9 @@ struct hud_state {
 
     struct wl_surface *surface;
     struct zwlr_layer_surface_v1 *layer_surface;
+
+    int height;
+    int width;
 };
 
 int hud_state_init(struct hud_state *state, struct wl_registry *registry, struct wl_display *display);

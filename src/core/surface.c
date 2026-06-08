@@ -1,5 +1,6 @@
 #include "surface.h"
 #include "../util/log.h"
+#include "../wayland/listeners/layer_surface.h"
 #include "../wayland/protocols/wlr-layer-shell-unstable-v1-protocol.h"
 
 int init_surface(struct hud_state *state) {
@@ -22,7 +23,9 @@ int init_surface(struct hud_state *state) {
         ERROR("failed to create layer surface.");
         return  -1;
     }
+
     state->layer_surface = layer_surface;
+    zwlr_layer_surface_v1_add_listener(state->layer_surface, &layer_surface_listener, &state);
 
     zwlr_layer_surface_v1_set_anchor(layer_surface, ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP | ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT | ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT);
 

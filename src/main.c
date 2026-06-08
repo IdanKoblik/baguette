@@ -1,7 +1,6 @@
 #include "core/hud.h"
 #include "util/log.h"
 #include "wayland/listeners/global.h"
-#include <wayland-client-core.h>
 
 int main(int argc, char **argv) {
     // Hide compile warning
@@ -22,7 +21,7 @@ int main(int argc, char **argv) {
     }
 
     INFO("Success: Connected to the display registry successfully!");
-    struct hud_state state;
+    struct hud_state state = {0};
     if (hud_state_init(&state, registry, display) < 0) {
         ERROR("failed to init hud state.");
         return -1;
