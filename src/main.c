@@ -2,7 +2,15 @@
 #include "util/log.h"
 #include "wayland/listeners/global.h"
 #include "core/draw.h"
+#include <signal.h>
 #include <unistd.h>
+
+static volatile sig_atomic_t running = 1;
+
+static void handle_signal(int signum) {
+    (void)signum;
+    running = 0;
+}
 
 int main(int argc, char **argv) {
     // Hide compile warning
@@ -38,7 +46,10 @@ int main(int argc, char **argv) {
     }
 
     INFO("Success: Loaded hud successfully!");
-    for (;;) {
+    signal(SIGINT, handle_signal);
+    signal(SIGTERM, handle_signal);
+
+    while (running) {
         char temp[64];
         draw_hud(&state, "baguette", temp, temp);
 
