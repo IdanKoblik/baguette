@@ -1,7 +1,13 @@
 # Local
 baguette
 build/
+coverage/
 compile_commands.json
+
+# Coverage data
+*.gcno
+*.gcda
+*.gcov
 
 # Prerequisites
 *.d
