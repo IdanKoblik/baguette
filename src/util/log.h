@@ -1,5 +1,4 @@
-#ifndef LOG_H_
-#define LOG_H_
+#pragma once
 
 #include <time.h>
 #include <string.h>
@@ -31,4 +30,3 @@
 #define DEBUG(fmt, ...) \
     LOG("[DEBUG] " fmt, ##__VA_ARGS__)
 
-#endif // LOG_H_

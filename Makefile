@@ -12,18 +12,31 @@ DEPS := $(OBJS:.o=.d)
 
 PROTOCOLS := $(wildcard protocols/*.xml)
 
-GENERATED_HEADERS := $(PROTOCOLS:protocols/%.xml=src/%-protocol.h)
-GENERATED_SOURCES := $(PROTOCOLS:protocols/%.xml=src/%-protocol.c)
+GENERATED_HEADERS := $(PROTOCOLS:protocols/%.xml=src/wayland/protocols/%-protocol.h)
+GENERATED_SOURCES := $(PROTOCOLS:protocols/%.xml=src/wayland/protocols/%-protocol.c)
 
-.PHONY: all clean run compdb protocol
+TEST_DIR  := tests
+TEST_SRCS := $(wildcard $(TEST_DIR)/*.c)
+TEST_BIN  := $(OBJ_DIR)/test_runner
+# Link every production object except main.o (which owns its own main()).
+TEST_OBJS := $(filter-out $(OBJ_DIR)/main.o,$(OBJS))
+
+# Coverage: instrument the production sources (except main.c).
+COV_DIR  := coverage
+COV_OBJ  := $(COV_DIR)/obj
+COV_SRCS := $(filter-out $(SRC_DIR)/main.c,$(SRCS)) $(TEST_SRCS)
+COV_OBJS := $(COV_SRCS:%.c=$(COV_OBJ)/%.o)
+
+.PHONY: all clean run compdb protocol test coverage
 
 all: $(BIN)
 
+# Requires wayland-scanner package
 protocol: $(GENERATED_HEADERS) $(GENERATED_SOURCES)
-src/%-protocol.h: protocols/%.xml
+src/wayland/protocols/%-protocol.h: protocols/%.xml
 	wayland-scanner client-header $< $@
 
-src/%-protocol.c: protocols/%.xml
+src/wayland/protocols/%-protocol.c: protocols/%.xml
 	wayland-scanner private-code $< $@
 
 # Generate compile_commands.json for clangd (requires `bear`)
@@ -40,7 +53,24 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 run: $(BIN)
 	./$(BIN)
 
+test: protocol $(TEST_OBJS) $(TEST_SRCS)
+	$(CC) $(CFLAGS) -I$(TEST_DIR) $(TEST_SRCS) $(TEST_OBJS) -o $(TEST_BIN) $(LDLIBS)
+	./$(TEST_BIN)
+
+# Requires lcov
+coverage: protocol $(COV_OBJS)
+	$(CC) $(COV_OBJS) --coverage -o $(COV_DIR)/test_runner $(LDLIBS)
+	./$(COV_DIR)/test_runner
+	lcov --capture --directory $(COV_OBJ) --output-file $(COV_DIR)/coverage.info
+	lcov --remove $(COV_DIR)/coverage.info '*/tests/*' '/usr/*' --output-file $(COV_DIR)/coverage.info
+	genhtml $(COV_DIR)/coverage.info --output-directory $(COV_DIR)/html
+	@echo "Coverage report: $(COV_DIR)/html/index.html"
+
+$(COV_OBJ)/%.o: %.c
+	@mkdir -p $(@D)
+	$(CC) $(CFLAGS) -I$(TEST_DIR) --coverage -c $< -o $@
+
 clean:
-	rm -rf $(OBJ_DIR) $(BIN) $(GENERATED_SOURCES) $(GENERATED_HEADERS)
+	rm -rf $(OBJ_DIR) $(BIN) $(COV_DIR) $(GENERATED_SOURCES) $(GENERATED_HEADERS)
 
 -include $(DEPS)
