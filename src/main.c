@@ -3,6 +3,7 @@
 #include "wayland/listeners/global.h"
 #include "core/draw.h"
 #include <signal.h>
+#include <sys/syslog.h>
 #include <unistd.h>
 
 static volatile sig_atomic_t running = 1;
@@ -16,6 +17,8 @@ int main(int argc, char **argv) {
     // Hide compile warning
     (void)!argc;
     (void)!argv;
+
+    openlog(NULL, LOG_PID | LOG_PERROR, LOG_USER);
 
     struct wl_display *display = wl_display_connect(NULL);
     if (!display) {
@@ -61,6 +64,7 @@ int main(int argc, char **argv) {
         sleep(1);
     }
 
+    closelog();
     if (hud_state_destroy(&state) < 0)
         ERROR("failed to destory hud state");
 
