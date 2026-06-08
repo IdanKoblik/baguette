@@ -1,6 +1,8 @@
 #include "hud.h"
 #include "../util/log.h"
+#include "buffer.h"
 #include "surface.h"
+#include <sys/mman.h>
 #include <wayland-client-core.h>
 #include <wayland-client-protocol.h>
 
@@ -39,6 +41,13 @@ int hud_state_active(struct hud_state *state) {
     }
 
     wl_display_roundtrip(state->display);
+
+    if (init_buffer(state) < 0) {
+        ERROR("Cannot init hud buffer.");
+        return -1;
+    }
+
+    wl_display_roundtrip(state->display);
     return 0;
 }
 
@@ -49,6 +58,32 @@ int hud_state_destroy(struct hud_state *state) {
     }
 
     INFO("Cleaning up hud state.");
+    if (state->cairo)
+        cairo_destroy(state->cairo);
+
+    if (state->cairo_surface)
+        cairo_surface_destroy(state->cairo_surface);
+
+    if (state->pixels) {
+        int scale = state->scale > 0 ? state->scale : 1;
+        munmap(state->pixels, (state->width * scale) * (state->height * scale) * sizeof(uint32_t));
+    }
+
+    if (state->layer_shell)
+        zwlr_layer_shell_v1_destroy(state->layer_shell);
+
+    if (state->surface)
+        wl_surface_destroy(state->surface);
+
+    if (state->layer_surface)
+        zwlr_layer_surface_v1_destroy(state->layer_surface);
+
+    if (state->shm)
+        wl_shm_destroy(state->shm);
+
+    if (state->shm_pool)
+        wl_shm_pool_destroy(state->shm_pool);
+
     if (state->compositor)
         wl_compositor_destroy(state->compositor);
 

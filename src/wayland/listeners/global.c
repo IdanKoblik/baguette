@@ -21,5 +21,8 @@ void registry_handle_global(void *data, struct wl_registry *registry, uint32_t n
     } else if (strcmp(interface, zwlr_layer_shell_v1_interface.name) == 0) {
         DEBUG("loading layer_shell_v1(interface=%s), name: %d (version: %d)", interface, name, version);
         state->layer_shell = wl_registry_bind(registry, name, &zwlr_layer_shell_v1_interface, version);
+    } else if (strcmp(interface, wl_shm_interface.name) == 0) {
+        DEBUG("loading shm(interface=%s), name: %d (version: %d)", interface, name, version);
+        state->shm = wl_registry_bind(registry, name, &wl_shm_interface, version);
     }
 }
