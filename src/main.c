@@ -3,10 +3,13 @@
 #include "util/log.h"
 #include "wayland/listeners/global.h"
 #include "core/draw.h"
+#include <linux/limits.h>
 #include <signal.h>
 #include <string.h>
 #include <sys/syslog.h>
 #include <unistd.h>
+#include <stdio.h>
+#include <poll.h>
 
 static volatile sig_atomic_t running = 1;
 
@@ -60,6 +63,10 @@ int main(int argc, char **argv) {
     signal(SIGINT, handle_signal);
     signal(SIGTERM, handle_signal);
 
+    struct pollfd stdin_fd;
+    stdin_fd.fd = STDIN_FILENO;
+    stdin_fd.events = POLLIN;
+
     while (running) {
         wl_display_roundtrip(display);
         int want_scale = state.scale > 0 ? state.scale : 1;
@@ -69,8 +76,8 @@ int main(int argc, char **argv) {
                 ERROR("failed to rebuild buffer on rescale.");
         }
 
-        // TODO fix (issue #2)
-        draw_hud(&state, "baguette", "01/11/2026 - 21:21:21", "baguette");
+        hud_info_process(state.info, &stdin_fd);
+        draw_hud(&state, state.info->left, state.info->center, state.info->right);
 
         wl_surface_attach(state.surface, state.buffer, 0, 0);
         wl_surface_damage_buffer(state.surface, 0, 0, state.width, state.height);

@@ -5,6 +5,7 @@
 #include <sys/mman.h>
 #include <wayland-client-core.h>
 #include <wayland-client-protocol.h>
+#include <stdlib.h>
 
 int hud_state_init(struct hud_state *state, struct wl_registry *registry, struct wl_display *display) {
     if (!state) {
@@ -31,25 +32,79 @@ int hud_state_init(struct hud_state *state, struct wl_registry *registry, struct
 
 int hud_state_active(struct hud_state *state) {
     if (!state) {
-        ERROR("Cannot activate hud state -> null.");
+        ERROR("cannot activate hud state -> null.");
         return -1;
     }
 
     INFO("activating hud state.");
     if (init_surface(state) < 0) {
-        ERROR("Cannot init hud surface.");
+        ERROR("cannot init hud surface.");
         return -1;
     }
 
     wl_display_roundtrip(state->display);
 
     if (init_buffer(state) < 0) {
-        ERROR("Cannot init hud buffer.");
+        ERROR("cannot init hud buffer.");
         return -1;
     }
 
     wl_display_roundtrip(state->display);
+    struct hud_info *info = (struct hud_info *)malloc(sizeof(struct hud_info));
+    if (!info) {
+        ERROR("cannot allocate hud info.");
+        return -1;
+    }
+
+    state->info = info;
     return 0;
+}
+
+void hud_info_process(struct hud_info *info, struct pollfd *stdin_fd) {
+    if (!info) {
+        ERROR("cannot update hud info -> null.");
+        return;
+    }
+
+    if (!stdin_fd) {
+        ERROR("cannot update hud info, stdin fd not found.");
+        return;
+    }
+
+    const char *eof = "<EOF>";
+    int ret = poll(stdin_fd, 1, 1000);
+    if (ret < 0) {
+        ERROR("something went wrong with poll.");
+        return;
+    }
+
+    if (ret == 0)
+        goto info_eof;
+
+    if (!(stdin_fd->revents & POLLIN))
+        return;
+
+    char buf[MAX_INPUT];
+    ssize_t n = read(stdin_fd->fd, buf, sizeof buf - 1);
+    if (n > 0) {
+        buf[n] = '\0';
+        // Trim trailing newline(s)
+        while (n > 0 && (buf[n-1] == '\n' || buf[n-1] == '\r')) { buf[--n] = '\0'; }
+
+        snprintf(info->right,  MAX_INPUT, "%s", buf);
+        snprintf(info->left,   MAX_INPUT, "%s", buf);
+        snprintf(info->center, MAX_INPUT, "%s", buf);
+
+        return;
+    }
+
+    if (n < 0 && !(errno == EAGAIN || errno == EWOULDBLOCK))
+        ERROR("cannot read from poll.");
+
+info_eof:
+    snprintf(info->right,  MAX_INPUT, "%s", eof);
+    snprintf(info->left,   MAX_INPUT, "%s", eof);
+    snprintf(info->center, MAX_INPUT, "%s", eof);
 }
 
 int hud_state_destroy(struct hud_state *state) {
@@ -59,6 +114,9 @@ int hud_state_destroy(struct hud_state *state) {
     }
 
     INFO("Cleaning up hud state.");
+    if (state->info)
+        free(state->info);
+
     if (state->cairo)
         cairo_destroy(state->cairo);
 

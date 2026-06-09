@@ -3,6 +3,7 @@
 SUITE_EXTERN(buffer_suite);
 SUITE_EXTERN(draw_suite);
 SUITE_EXTERN(log_suite);
+SUITE_EXTERN(hud_suite);
 
 GREATEST_MAIN_DEFS();
 
@@ -11,5 +12,6 @@ int main(int argc, char **argv) {
     RUN_SUITE(buffer_suite);
     RUN_SUITE(draw_suite);
     RUN_SUITE(log_suite);
+    RUN_SUITE(hud_suite);
     GREATEST_MAIN_END();
 }
