@@ -58,6 +58,7 @@ jobs:
 
   sanitizers:
     name: Sanitizers (ASan + UBSan)
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -75,6 +76,7 @@ jobs:
 
   analyze:
     name: Static analysis
+    needs: test
     runs-on: ubuntu-latest
     # Non-blocking: surfaces findings without failing the pipeline. Flip to
     # `false` (or remove) once the codebase is clean to make it enforcing.
