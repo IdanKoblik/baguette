@@ -3,9 +3,9 @@
 #include "greatest.h"
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 // read_config() reads $HOME/.config/baguette/style.cfg via libconfig. These
 // tests stand up a throwaway $HOME, drop a style.cfg into it, and assert on the
@@ -86,14 +86,13 @@ TEST config_fails_when_file_missing(void) {
 
 TEST config_parses_all_fields(void) {
     set_temp_home();
-    write_style_cfg(
-        "font = \"JetBrains Mono\";\n"
-        "font_size = 14.5;\n"
-        "background = \"#1e1e2e\";\n"
-        "hud_padding = 8;\n"
-        "radius = 12;\n"
-        "vmargin = 4;\n"
-        "pad_x = 6;\n");
+    write_style_cfg("font = \"JetBrains Mono\";\n"
+                    "font_size = 14.5;\n"
+                    "background = \"#1e1e2e\";\n"
+                    "hud_padding = 8;\n"
+                    "radius = 12;\n"
+                    "vmargin = 4;\n"
+                    "pad_x = 6;\n");
 
     struct hud_state state = {0};
     int rc = read_config(&state);

@@ -8,7 +8,8 @@
 #include <wayland-client-core.h>
 #include <wayland-client-protocol.h>
 
-int hud_state_init(struct hud_state *state, struct wl_registry *registry, struct wl_display *display) {
+int hud_state_init(struct hud_state *state, struct wl_registry *registry,
+                   struct wl_display *display) {
     if (!state) {
         ERROR("cannot init hud state -> null.");
         return -1;

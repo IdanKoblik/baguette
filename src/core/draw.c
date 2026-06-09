@@ -30,7 +30,7 @@ static void draw_full_background(struct hud_state *state) {
     double x = state->cfg->hud_padding;
     double y = state->cfg->vmargin;
     double w = state->width - 2 * state->cfg->hud_padding;
-    double h = state->height - 2 *state->cfg->vmargin;
+    double h = state->height - 2 * state->cfg->vmargin;
 
     struct color background = state->cfg->background_color;
     cairo_set_source_rgb(cr, background.r, background.g, background.b);

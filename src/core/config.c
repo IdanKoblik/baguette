@@ -1,17 +1,15 @@
 #include "config.h"
-#include "hud.h"
 #include "../util/log.h"
+#include "hud.h"
+#include <libconfig.h>
 #include <linux/limits.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <libconfig.h>
 #include <string.h>
 
-#define CFG_LOOKUP_STRING(cfg, key, dst) \
-    config_lookup_string((cfg), (key), (const char **)&(dst))
+#define CFG_LOOKUP_STRING(cfg, key, dst) config_lookup_string((cfg), (key), (const char **)&(dst))
 
-#define CFG_LOOKUP_FLOAT(cfg, key, dst) \
-    config_lookup_float((cfg), (key), &(dst))
+#define CFG_LOOKUP_FLOAT(cfg, key, dst) config_lookup_float((cfg), (key), &(dst))
 
 int read_config(struct hud_state *state) {
     if (!state) {
@@ -26,7 +24,8 @@ int read_config(struct hud_state *state) {
     }
 
     char cfg_path[PATH_MAX];
-    int len = snprintf(cfg_path, sizeof(cfg_path), "%s/.config/baguette/%s", home_path, CONFIG_FILE);
+    int len =
+        snprintf(cfg_path, sizeof(cfg_path), "%s/.config/baguette/%s", home_path, CONFIG_FILE);
     if (len < 0 || (size_t)len >= sizeof(cfg_path)) {
         ERROR("cannot encode config path.");
         return -1;
