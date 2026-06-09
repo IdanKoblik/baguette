@@ -2,12 +2,13 @@
 
 ## Supported Versions
 
-baguette is under active development. Security fixes are applied to the
-latest release and the `main` branch only.
+baguette's first official release is `2026-b1`. Security fixes are applied
+to the latest release and the `main` branch only.
 
-| Version | Supported          |
-| ------- | ------------------ |
-| `main`  | :white_check_mark: |
+| Version   | Supported          |
+| --------- | ------------------ |
+| `2026-b1` | :white_check_mark: |
+| `main`    | :white_check_mark: |
 
 ## Reporting a Vulnerability
 
