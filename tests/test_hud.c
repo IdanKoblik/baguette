@@ -108,7 +108,8 @@ TEST init_zeroes_state_and_stores_handles(void) {
     ASSERT_EQ(0, hud_state_init(&state, reg, disp));
     ASSERT_EQ((void *)disp, (void *)state.display);
     ASSERT_EQ((void *)reg, (void *)state.registry);
-    ASSERT_EQ(0, state.width); // zeroed by memset
+    ASSERT_EQ(NULL, (void *)state.cfg); // populated later by read_config()
+    ASSERT_EQ(0, state.width);          // zeroed by memset
     ASSERT_EQ(NULL, (void *)state.info);
     PASS();
 }

@@ -5,6 +5,7 @@ SUITE_EXTERN(draw_suite);
 SUITE_EXTERN(log_suite);
 SUITE_EXTERN(hud_suite);
 SUITE_EXTERN(format_suite);
+SUITE_EXTERN(config_suite);
 
 GREATEST_MAIN_DEFS();
 

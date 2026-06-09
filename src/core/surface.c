@@ -69,8 +69,8 @@ int init_surface(struct hud_state *state) {
                                                         ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT |
                                                         ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT);
 
-    zwlr_layer_surface_v1_set_size(layer_surface, 0, HEIGHT);
-    zwlr_layer_surface_v1_set_exclusive_zone(layer_surface, HEIGHT);
+    zwlr_layer_surface_v1_set_size(layer_surface, 0, state->cfg->height);
+    zwlr_layer_surface_v1_set_exclusive_zone(layer_surface, state->cfg->height);
 
     wl_surface_commit(surface);
 

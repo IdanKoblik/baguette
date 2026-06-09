@@ -1,6 +1,6 @@
 CC      := cc
 CFLAGS  := -Wall -Wextra -std=c17 -D_XOPEN_SOURCE=700 -Isrc $(shell pkg-config --cflags wayland-client cairo) $(EXTRA_CFLAGS)
-LDLIBS  := $(shell pkg-config --libs wayland-client cairo) -lm
+LDLIBS  := $(shell pkg-config --libs wayland-client cairo) -lm -lconfig
 
 SRC_DIR := src
 OBJ_DIR := build

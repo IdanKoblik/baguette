@@ -11,17 +11,17 @@
 int hud_state_init(struct hud_state *state, struct wl_registry *registry,
                    struct wl_display *display) {
     if (!state) {
-        ERROR("Cannot init hud state -> null.");
+        ERROR("cannot init hud state -> null.");
         return -1;
     }
 
     if (!registry) {
-        ERROR("Cannot init hud_state, registry -> null.");
+        ERROR("cannot init hud_state, registry -> null.");
         return -1;
     }
 
     if (!display) {
-        ERROR("Cannot init hud_state, display -> null.");
+        ERROR("cannot init hud_state, display -> null.");
         return -1;
     }
 
@@ -157,6 +157,11 @@ int hud_state_destroy(struct hud_state *state) {
 
     if (state->display)
         wl_display_disconnect(state->display);
+
+    if (state->cfg) {
+        free((void *)state->cfg->font);
+        free(state->cfg);
+    }
 
     return 0;
 }

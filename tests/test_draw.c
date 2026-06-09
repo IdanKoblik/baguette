@@ -5,12 +5,27 @@
 #include <cairo/cairo.h>
 #include <stdint.h>
 
+// Shared config for the draw tests. draw_hud() reads geometry, font and the
+// background colour from state->cfg, so every test state points here. The
+// background is opaque grey ~0x10 to match what draw_paints_background asserts.
+static struct config test_cfg = {
+    .font = "monospace",
+    .font_size = 12,
+    .height = 40,
+    .background_color = {16 / 255.0, 16 / 255.0, 16 / 255.0},
+    .hud_padding = 4,
+    .radius = 8,
+    .vmargin = 4,
+    .pad_x = 6,
+};
+
 // Build a hud_state backed by an in-memory Cairo surface so draw_hud() can run
 // with no Wayland compositor. Caller must free with free_test_state().
 static void make_test_state(struct hud_state *state, int w, int h) {
     *state = (struct hud_state){0};
     state->width = w;
     state->height = h;
+    state->cfg = &test_cfg;
     state->cairo_surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, w, h);
     state->cairo = cairo_create(state->cairo_surface);
 }
