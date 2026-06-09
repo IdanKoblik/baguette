@@ -5,8 +5,8 @@
 #include <string.h>
 #include <unistd.h>
 
-// hud_info_process() polls a fd and copies the line it reads into all three
-// hud_info sections.
+// hud_info_process() polls a fd and decodes the line it reads into the three
+// tab-separated hud_info sections.
 static int temp_fd_with(const char *contents) {
     char path[] = "/tmp/baguette_hud_XXXXXX";
     int fd = mkstemp(path);
@@ -17,17 +17,17 @@ static int temp_fd_with(const char *contents) {
     return fd;
 }
 
-TEST process_reads_line_into_all_sections(void) {
+TEST process_decodes_tab_separated_sections(void) {
     struct hud_info info = {0};
-    int fd = temp_fd_with("hello");
+    int fd = temp_fd_with("L\tC\tR");
     struct pollfd pfd = {.fd = fd, .events = POLLIN};
 
     hud_info_process(&info, &pfd);
     close(fd);
 
-    ASSERT_STR_EQ("hello", info.left);
-    ASSERT_STR_EQ("hello", info.center);
-    ASSERT_STR_EQ("hello", info.right);
+    ASSERT_STR_EQ("L", info.left.text);
+    ASSERT_STR_EQ("C", info.center.text);
+    ASSERT_STR_EQ("R", info.right.text);
     PASS();
 }
 
@@ -39,7 +39,7 @@ TEST process_trims_trailing_newline(void) {
     hud_info_process(&info, &pfd);
     close(fd);
 
-    ASSERT_STR_EQ("world", info.left);
+    ASSERT_STR_EQ("world", info.left.text);
     PASS();
 }
 
@@ -51,7 +51,7 @@ TEST process_trims_trailing_crlf(void) {
     hud_info_process(&info, &pfd);
     close(fd);
 
-    ASSERT_STR_EQ("line", info.right);
+    ASSERT_STR_EQ("line", info.left.text); // no tabs -> all in the left section
     PASS();
 }
 
@@ -63,9 +63,9 @@ TEST process_eof_yields_eof_marker(void) {
     hud_info_process(&info, &pfd);
     close(fd);
 
-    ASSERT_STR_EQ("<EOF>", info.left);
-    ASSERT_STR_EQ("<EOF>", info.center);
-    ASSERT_STR_EQ("<EOF>", info.right);
+    ASSERT_STR_EQ("<EOF>", info.left.text);
+    ASSERT_STR_EQ("<EOF>", info.center.text);
+    ASSERT_STR_EQ("<EOF>", info.right.text);
     PASS();
 }
 
@@ -80,7 +80,7 @@ TEST process_null_info_is_safe(void) {
 TEST process_null_pollfd_is_safe(void) {
     struct hud_info info = {0};
     hud_info_process(&info, NULL); // must not crash, leaves info untouched
-    ASSERT_STR_EQ("", info.left);
+    ASSERT_STR_EQ("", info.left.text);
     PASS();
 }
 
@@ -127,7 +127,7 @@ TEST destroy_zeroed_state_is_noop(void) {
 }
 
 SUITE(hud_suite) {
-    RUN_TEST(process_reads_line_into_all_sections);
+    RUN_TEST(process_decodes_tab_separated_sections);
     RUN_TEST(process_trims_trailing_newline);
     RUN_TEST(process_trims_trailing_crlf);
     RUN_TEST(process_eof_yields_eof_marker);
