@@ -39,8 +39,7 @@ static void draw_full_background(struct hud_state *state) {
 // shared full-width background (HUD_STYLE_FULL).
 // dr/dg/db is the section's default colour, used when the input carries no
 // %{#rrggbb} tag (sec->has_color == false).
-static void draw_section(struct hud_state *state, const struct fmt_section *sec, enum hud_align align,
-                         int pill, double dr, double dg, double db) {
+static void draw_section(struct hud_state *state, const struct fmt_section *sec, enum hud_align align, int pill, double dr, double dg, double db) {
     const char *text = sec->text;
     if (!text || !*text)
         return;
