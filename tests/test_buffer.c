@@ -1,5 +1,5 @@
-#include "greatest.h"
 #include "core/buffer.h"
+#include "greatest.h"
 
 TEST geometry_unscaled(void) {
     struct buffer_geometry g = buffer_compute_geometry(100, 40, 1);

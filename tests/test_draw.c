@@ -1,7 +1,7 @@
-#include "greatest.h"
 #include "core/draw.h"
-#include "core/hud.h"
 #include "core/format.h"
+#include "core/hud.h"
+#include "greatest.h"
 #include <cairo/cairo.h>
 #include <stdint.h>
 
@@ -19,7 +19,7 @@ static void make_test_state(struct hud_state *state, int w, int h) {
 static struct hud_info info_from(const char *line) {
     struct fmt_frame f;
     fmt_decode(line, &f);
-    struct hud_info info = { .left = f.left, .center = f.center, .right = f.right };
+    struct hud_info info = {.left = f.left, .center = f.center, .right = f.right};
     return info;
 }
 
@@ -54,8 +54,8 @@ TEST draw_paints_background(void) {
     uint32_t p2 = pixel_at(&state, 30, 15);
 
     // ARGB32 is 0xAARRGGBB, premultiplied. Background is opaque grey ~0x10.
-    ASSERT_EQ_FMT((uint32_t)0xFF, p1 >> 24, "%x");   // alpha
-    ASSERT_EQ_FMT(p1, p2, "%x");                     // uniform fill
+    ASSERT_EQ_FMT((uint32_t)0xFF, p1 >> 24, "%x"); // alpha
+    ASSERT_EQ_FMT(p1, p2, "%x");                   // uniform fill
 
     uint8_t r = (p1 >> 16) & 0xFF;
     uint8_t g = (p1 >> 8) & 0xFF;

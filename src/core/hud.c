@@ -1,14 +1,15 @@
 #include "hud.h"
 #include "../util/log.h"
 #include "buffer.h"
-#include "surface.h"
 #include "format.h"
+#include "surface.h"
+#include <stdlib.h>
 #include <sys/mman.h>
 #include <wayland-client-core.h>
 #include <wayland-client-protocol.h>
-#include <stdlib.h>
 
-int hud_state_init(struct hud_state *state, struct wl_registry *registry, struct wl_display *display) {
+int hud_state_init(struct hud_state *state, struct wl_registry *registry,
+                   struct wl_display *display) {
     if (!state) {
         ERROR("Cannot init hud state -> null.");
         return -1;
@@ -90,15 +91,17 @@ void hud_info_process(struct hud_info *info, struct pollfd *stdin_fd) {
     if (n > 0) {
         buf[n] = '\0';
         // Trim trailing newline(s)
-        while (n > 0 && (buf[n-1] == '\n' || buf[n-1] == '\r')) { buf[--n] = '\0'; }
+        while (n > 0 && (buf[n - 1] == '\n' || buf[n - 1] == '\r')) {
+            buf[--n] = '\0';
+        }
 
         struct fmt_frame frame;
         fmt_decode(buf, &frame);
 
         // Carry text and colour through to drawing in one shot.
-        info->left   = frame.left;
+        info->left = frame.left;
         info->center = frame.center;
-        info->right  = frame.right;
+        info->right = frame.right;
 
         return;
     }

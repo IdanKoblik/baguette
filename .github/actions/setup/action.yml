@@ -1,0 +1,18 @@
+name: Setup build deps
+description: Install and cache the C / Wayland / Cairo build dependencies.
+
+inputs:
+  packages:
+    description: Extra apt packages (space-separated) to install on top of the base build deps.
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Install and cache apt packages
+      uses: awalsh128/cache-apt-pkgs-action@v1
+      with:
+        # libwayland-bin provides wayland-scanner, required by the Makefile `protocol` target.
+        packages: build-essential pkg-config libwayland-dev libwayland-bin libcairo2-dev ${{ inputs.packages }}
+        version: "1"

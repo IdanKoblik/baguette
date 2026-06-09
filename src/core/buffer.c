@@ -1,9 +1,9 @@
 #define _GNU_SOURCE
 
-#include <unistd.h>
-#include <sys/mman.h>
 #include "buffer.h"
 #include "../util/log.h"
+#include <sys/mman.h>
+#include <unistd.h>
 
 struct buffer_geometry buffer_compute_geometry(int width, int height, int32_t scale) {
     int s = scale > 0 ? scale : 1;
@@ -93,7 +93,8 @@ int init_buffer(struct hud_state *state) {
     // no longer needed (matters because init_buffer can run again on rescale).
     close(fd);
 
-    struct wl_buffer *buffer = wl_shm_pool_create_buffer(shm_pool, 0, dev_width, dev_height, stride, WL_SHM_FORMAT_ARGB8888);
+    struct wl_buffer *buffer = wl_shm_pool_create_buffer(shm_pool, 0, dev_width, dev_height, stride,
+                                                         WL_SHM_FORMAT_ARGB8888);
     if (!buffer) {
         ERROR("failed to create buffer.");
         return -1;
@@ -103,7 +104,8 @@ int init_buffer(struct hud_state *state) {
     // Wrap the shm pixels in a Cairo surface so we can draw straight into the
     // buffer. CAIRO_FORMAT_ARGB32 is native-endian premultiplied 0xAARRGGBB,
     // which matches WL_SHM_FORMAT_ARGB8888.
-    state->cairo_surface = cairo_image_surface_create_for_data( (unsigned char *)pixels, CAIRO_FORMAT_ARGB32, dev_width, dev_height, stride);
+    state->cairo_surface = cairo_image_surface_create_for_data(
+        (unsigned char *)pixels, CAIRO_FORMAT_ARGB32, dev_width, dev_height, stride);
     if (cairo_surface_status(state->cairo_surface) != CAIRO_STATUS_SUCCESS) {
         ERROR("failed to create cairo surface.");
         return -1;

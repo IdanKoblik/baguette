@@ -1,8 +1,8 @@
 #pragma once
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdbool.h>
 
 // Wire format for stdin frames.
 //
@@ -24,24 +24,24 @@
 // silently dropped.
 
 #define FMT_REGION_DELIM '\t'
-#define FMT_MAX_TEXT     256 // bytes per section, including the NUL
-#define FMT_MAX_SPANS    32  // colour runs per section; extras keep prior colour
+#define FMT_MAX_TEXT 256 // bytes per section, including the NUL
+#define FMT_MAX_SPANS 32 // colour runs per section; extras keep prior colour
 
 // A run of bytes in fmt_section::text drawn in one colour. has_color == false
 // means "use the default colour" (no tag yet, or after a %{-} reset).
 struct fmt_span {
-    size_t   start;     // byte offset into the section's text
-    size_t   len;       // byte length of the run
-    uint32_t color;     // 0xRRGGBB, meaningful only when has_color is true
-    bool     has_color;
+    size_t start;   // byte offset into the section's text
+    size_t len;     // byte length of the run
+    uint32_t color; // 0xRRGGBB, meaningful only when has_color is true
+    bool has_color;
 };
 
 // One section: its decoded text plus the colour runs covering it. There is
 // always at least one span; spans tile text[] in order with no gaps.
 struct fmt_section {
-    char            text[FMT_MAX_TEXT];
+    char text[FMT_MAX_TEXT];
     struct fmt_span spans[FMT_MAX_SPANS];
-    size_t          nspans;
+    size_t nspans;
 };
 
 struct fmt_frame {

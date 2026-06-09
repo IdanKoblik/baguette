@@ -1,5 +1,5 @@
-#include "greatest.h"
 #include "core/format.h"
+#include "greatest.h"
 #include <string.h>
 
 TEST decode_rejects_null_args(void) {
@@ -10,8 +10,12 @@ TEST decode_rejects_null_args(void) {
 }
 
 // Convenience: the colour in effect at the start of a section.
-static bool sec_has_color(const struct fmt_section *s) { return s->spans[0].has_color; }
-static uint32_t sec_color(const struct fmt_section *s) { return s->spans[0].color; }
+static bool sec_has_color(const struct fmt_section *s) {
+    return s->spans[0].has_color;
+}
+static uint32_t sec_color(const struct fmt_section *s) {
+    return s->spans[0].color;
+}
 
 TEST decode_empty_input_yields_empty_sections(void) {
     struct fmt_frame f;
@@ -234,8 +238,8 @@ TEST encode_truncates_to_cap_and_returns_full_length(void) {
 
     char buf[4];
     int n = fmt_encode(&f, buf, sizeof buf); // needs "abcdef\t\t" = 8 bytes
-    ASSERT_EQ(8, n);                          // full length reported
-    ASSERT_EQ(3, (int)strlen(buf));           // but only cap-1 written
+    ASSERT_EQ(8, n);                         // full length reported
+    ASSERT_EQ(3, (int)strlen(buf));          // but only cap-1 written
     ASSERT_STR_EQ("abc", buf);
     PASS();
 }

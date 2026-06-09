@@ -1,0 +1,7 @@
+# LeakSanitizer suppressions.
+# Cairo/fontconfig keep process-lifetime internal caches that are never freed
+# by design; these are not leaks in baguette's own code.
+leak:libfontconfig
+leak:libcairo
+leak:libpixman
+leak:libfreetype
