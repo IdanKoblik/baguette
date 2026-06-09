@@ -14,5 +14,5 @@ runs:
       uses: awalsh128/cache-apt-pkgs-action@v1
       with:
         # libwayland-bin provides wayland-scanner, required by the Makefile `protocol` target.
-        packages: build-essential pkg-config libwayland-dev libwayland-bin libcairo2-dev ${{ inputs.packages }}
-        version: "1"
+        packages: build-essential pkg-config libwayland-dev libwayland-bin libcairo2-dev libconfig-dev ${{ inputs.packages }}
+        version: "2"
