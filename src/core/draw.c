@@ -2,12 +2,13 @@
 #include "../util/log.h"
 #include <cairo/cairo.h>
 #include <math.h>
+#include <string.h>
 
 // Per-section "pill" geometry, mirroring the waybar modules:
 // (waybar modules: padding 0.5rem 1rem, margin 5px 0, border-radius 5px)
 #define PILL_RADIUS 5
-#define PILL_VMARGIN 5 // top/bottom gap from the bar edges (waybar: margin 5px 0)
-#define PILL_PAD_X 16  // horizontal padding inside the pill (waybar: 1rem)
+#define PILL_VMARGIN 3 // top/bottom gap from the bar edges; smaller -> taller pill
+#define PILL_PAD_X 14  // horizontal padding inside the pill (slim, a touch under waybar's 1rem)
 
 enum hud_align { HUD_LEFT, HUD_CENTER, HUD_RIGHT };
 
@@ -37,23 +38,17 @@ static void draw_full_background(struct hud_state *state) {
 // Draw one section. With pill=true it gets its own floating background
 // (HUD_STYLE_SEPARATED); with pill=false only the text is drawn, on top of the
 // shared full-width background (HUD_STYLE_FULL).
-// dr/dg/db is the section's default colour, used when the input carries no
-// %{#rrggbb} tag (sec->has_color == false).
+// dr/dg/db is the default colour, used for any span that carries no %{#rrggbb}
+// tag (span->has_color == false).
 static void draw_section(struct hud_state *state, const struct fmt_section *sec, enum hud_align align, int pill, double dr, double dg, double db) {
     const char *text = sec->text;
     if (!text || !*text)
         return;
 
-    // A %{#rrggbb} tag overrides the default; otherwise fall back to it.
-    double tr = dr, tg = dg, tb = db;
-    if (sec->has_color) {
-        tr = ((sec->color >> 16) & 0xFF) / 255.0;
-        tg = ((sec->color >>  8) & 0xFF) / 255.0;
-        tb = ( sec->color        & 0xFF) / 255.0;
-    }
-
     cairo_t *cr = state->cairo;
 
+    // Box geometry is sized from the whole section's ink; the per-span colours
+    // only change how the runs are painted, not where they sit.
     cairo_text_extents_t te;
     cairo_text_extents(cr, text, &te);
 
@@ -81,12 +76,31 @@ static void draw_section(struct hud_state *state, const struct fmt_section *sec,
     }
 
     // Text, centred vertically in the bar and padded inside the pill. The pen
-    // origin is snapped to whole pixels so glyphs land on the grid.
+    // origin is snapped to whole pixels so glyphs land on the grid. Each colour
+    // run is shown in turn; cairo_show_text advances the current point, so the
+    // runs flow left-to-right with no per-run repositioning.
     double text_x = round(box_x + PILL_PAD_X - te.x_bearing);
     double text_y = round((state->height - te.height) / 2 - te.y_bearing);
-    cairo_set_source_rgb(cr, tr, tg, tb);
     cairo_move_to(cr, text_x, text_y);
-    cairo_show_text(cr, text);
+    for (size_t i = 0; i < sec->nspans; i++) {
+        const struct fmt_span *sp = &sec->spans[i];
+        if (sp->len == 0)
+            continue;
+
+        double tr = dr, tg = dg, tb = db;
+        if (sp->has_color) {
+            tr = ((sp->color >> 16) & 0xFF) / 255.0;
+            tg = ((sp->color >>  8) & 0xFF) / 255.0;
+            tb = ( sp->color        & 0xFF) / 255.0;
+        }
+
+        char seg[FMT_MAX_TEXT];
+        memcpy(seg, sec->text + sp->start, sp->len);
+        seg[sp->len] = '\0';
+
+        cairo_set_source_rgb(cr, tr, tg, tb);
+        cairo_show_text(cr, seg);
+    }
 }
 
 void draw_hud(struct hud_state *state, const struct hud_info *info) {

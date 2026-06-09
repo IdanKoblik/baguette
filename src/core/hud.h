@@ -9,7 +9,7 @@
 #include "../wayland/protocols/wlr-layer-shell-unstable-v1-protocol.h"
 #include "format.h"
 
-#define HEIGHT 43 // px
+#define HEIGHT 40 // px
 #define NAMESPACE "IdanK/Baguette"
 
 enum hud_style {

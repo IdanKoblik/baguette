@@ -19,9 +19,16 @@ static void handle_signal(int signum) {
 }
 
 static int section_changed(const struct fmt_section *a, const struct fmt_section *b) {
-    return a->has_color != b->has_color
-        || (a->has_color && a->color != b->color)
-        || strcmp(a->text, b->text) != 0;
+    if (strcmp(a->text, b->text) != 0 || a->nspans != b->nspans)
+        return 1;
+    for (size_t i = 0; i < a->nspans; i++) {
+        const struct fmt_span *x = &a->spans[i], *y = &b->spans[i];
+        if (x->start != y->start || x->len != y->len
+            || x->has_color != y->has_color
+            || (x->has_color && x->color != y->color))
+            return 1;
+    }
+    return 0;
 }
 
 static int hud_info_changed(const struct hud_info *a, const struct hud_info *b) {

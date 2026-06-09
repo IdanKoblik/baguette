@@ -26,10 +26,33 @@ static void put_text(struct fmt_section *sec, size_t *len, char c) {
         sec->text[(*len)++] = c;
 }
 
+// Apply a colour change at byte offset `t`. If the current span is still empty
+// (back-to-back tags, or a tag at the very start) we just retune it; otherwise
+// we close it and open a fresh span. Once FMT_MAX_SPANS is reached the change
+// is dropped and the remaining text keeps the current colour.
+static void set_color(struct fmt_section *sec, size_t t, uint32_t color, bool has_color) {
+    struct fmt_span *cur = &sec->spans[sec->nspans - 1];
+    if (t == cur->start) {
+        cur->color     = color;
+        cur->has_color = has_color;
+        return;
+    }
+    if (sec->nspans >= FMT_MAX_SPANS)
+        return;
+    cur->len = t - cur->start;
+    sec->spans[sec->nspans++] = (struct fmt_span){
+        .start = t, .len = 0, .color = color, .has_color = has_color,
+    };
+}
+
 static void parse_section(struct fmt_section *sec, const char *s, size_t len) {
     size_t      t   = 0;
     const char *p   = s;
     const char *end = s + len;
+
+    // Every section starts with one default-coloured span at offset 0.
+    sec->nspans   = 1;
+    sec->spans[0] = (struct fmt_span){ .start = 0, .len = 0, .color = 0, .has_color = false };
 
     while (p < end) {
         if (*p == '%' && p + 1 < end) {
@@ -45,14 +68,12 @@ static void parse_section(struct fmt_section *sec, const char *s, size_t len) {
                     size_t inner = (size_t)(q - (p + 2));
                     uint32_t rgb;
                     if (inner == 1 && p[2] == '-') {
-                        sec->has_color = false; // reset; later tags may set it again
-                        sec->color     = 0;
+                        set_color(sec, t, 0, false); // reset to default
                         p = q + 1;
                         continue;
                     }
                     if (inner == 7 && parse_hex_color(p + 2, &rgb)) {
-                        sec->color     = rgb;   // last colour tag wins
-                        sec->has_color = true;
+                        set_color(sec, t, rgb, true);
                         p = q + 1;
                         continue;
                     }
@@ -63,6 +84,7 @@ static void parse_section(struct fmt_section *sec, const char *s, size_t len) {
         put_text(sec, &t, *p);
         p++;
     }
+    sec->spans[sec->nspans - 1].len = t - sec->spans[sec->nspans - 1].start;
     sec->text[t] = '\0';
 }
 
@@ -112,15 +134,23 @@ int fmt_encode(const struct fmt_frame *frame, char *buf, size_t cap) {
             put_char(buf, cap, &need, FMT_REGION_DELIM);
 
         const struct fmt_section *sec = sections[r];
-        if (sec->has_color) {
-            char tag[12]; // "%{#rrggbb}" + NUL
-            snprintf(tag, sizeof tag, "%%{#%06x}", sec->color & 0xFFFFFFu);
-            put_str(buf, cap, &need, tag);
-        }
-
-        for (const char *t = sec->text; *t; t++) {
-            if (*t == '%') put_char(buf, cap, &need, '%'); // escape: % -> %%
-            put_char(buf, cap, &need, *t);
+        bool prev_color = false;
+        for (size_t i = 0; i < sec->nspans; i++) {
+            const struct fmt_span *sp = &sec->spans[i];
+            if (sp->has_color) {
+                char tag[12]; // "%{#rrggbb}" + NUL
+                snprintf(tag, sizeof tag, "%%{#%06x}", sp->color & 0xFFFFFFu);
+                put_str(buf, cap, &need, tag);
+                prev_color = true;
+            } else if (prev_color) {
+                put_str(buf, cap, &need, "%{-}"); // back to default
+                prev_color = false;
+            }
+            for (size_t k = 0; k < sp->len; k++) {
+                char c = sec->text[sp->start + k];
+                if (c == '%') put_char(buf, cap, &need, '%'); // escape: % -> %%
+                put_char(buf, cap, &need, c);
+            }
         }
     }
 
