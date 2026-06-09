@@ -1,0 +1,127 @@
+.\" Manpage for baguette.
+.\" Contact via https://github.com/IdanKoblik/baguette to correct errors or typos.
+.TH BAGUETTE 1 "2026-06-09" "baguette" "User Commands"
+.SH NAME
+baguette \- minimal Wayland HUD / status bar
+.SH SYNOPSIS
+.B baguette
+.RB [ \-\-separated " | " \-\-full ]
+.SH DESCRIPTION
+.B baguette
+is a lightweight overlay bar for
+.BR wlroots -based
+Wayland compositors. It draws a left / center / right status bar using
+Cairo on a
+.B wlr-layer-shell
+surface, and stays deliberately dumb: it does not collect any data itself.
+.PP
+Instead,
+.B baguette
+reads
+.B frames on standard input
+\(em one line per frame \(em and renders them. You bring the content by
+piping any program into it. The bar stays up for as long as standard input
+is open, redrawing only when the incoming frame actually changes. Send
+.B SIGINT
+or
+.B SIGTERM
+(or close the pipe) to exit.
+.SH OPTIONS
+.TP
+.B \-\-separated
+Draw each section as a separate rounded pill. This is the default.
+.TP
+.B \-\-full
+Draw one full-width background bar instead of separate pills.
+.SH INPUT FORMAT
+Each line of standard input is one frame. A frame is split into up to three
+sections by tab characters:
+.PP
+.RS
+.I LEFT
+\fB\\t\fR
+.I CENTER
+\fB\\t\fR
+.I RIGHT
+.RE
+.PP
+Each section is plain text with optional inline colour tags:
+.TP
+.B %{#rrggbb}
+Colour the text that follows.
+.TP
+.B %{-}
+Reset to the default colour.
+.TP
+.B %%
+A literal
+.BR % .
+.PP
+A colour tag applies from where it appears until the next tag or the end of
+the section, so one section can carry several differently-coloured runs.
+Anything that is not a recognised tag is kept literally \(em input is never
+silently dropped.
+.SH CONFIGURATION
+Global look (font, colours, sizes) is read from a
+.BR libconfig (3)
+file at:
+.PP
+.RS
+.I ~/.config/baguette/style.cfg
+.RE
+.PP
+Recognised keys include
+.BR font ,
+.BR font_size ,
+.BR height ,
+.BR background ,
+.BR hud_padding ,
+.BR radius ,
+.BR vmargin
+and
+.BR pad_x .
+See the bundled
+.I style.cfg
+example for the full set.
+.SH EXAMPLES
+A static one-frame example (left / center / right):
+.PP
+.RS
+.EX
+printf 'hello\\tcenter\\tworld\\n' | baguette
+.EE
+.RE
+.PP
+Red "CPU 72\(deC" on the right, default-coloured workspaces on the left,
+full-width bar:
+.PP
+.RS
+.EX
+printf ' 1 2 3\\t\\t%%{#ff5555}CPU 72\(deC%%{-}\\n' | baguette \-\-full
+.EE
+.RE
+.PP
+Anything that can print
+.I left \\t center \\t right
+lines works as a content generator.
+.SH EXIT STATUS
+.B baguette
+returns 0 on a clean shutdown and a non-zero value if it fails to connect to
+the Wayland display, set up the layer-shell surface, or read its
+configuration.
+.SH SEE ALSO
+.BR libconfig (3)
+.PP
+Project home page:
+.UR https://github.com/IdanKoblik/baguette
+.UE
+.PP
+za'atar, a ready-made content generator:
+.UR https://github.com/IdanKoblik/zaatar
+.UE
+.SH BUGS
+Report bugs at
+.UR https://github.com/IdanKoblik/baguette/issues
+.UE .
+.SH AUTHOR
+Idan Koblik and contributors.

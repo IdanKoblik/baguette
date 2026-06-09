@@ -1,0 +1,13 @@
+post_install() {
+	cat <<'EOF'
+baguette reads its style from ~/.config/baguette/style.cfg
+A sample config is installed at /usr/share/baguette/style.cfg. Copy it with:
+
+  mkdir -p ~/.config/baguette
+  cp /usr/share/baguette/style.cfg ~/.config/baguette/style.cfg
+EOF
+}
+
+post_upgrade() {
+	post_install
+}

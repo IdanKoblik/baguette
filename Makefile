@@ -6,6 +6,16 @@ SRC_DIR := src
 OBJ_DIR := build
 BIN     := baguette
 LOG     := baguette.log
+MAN1    := man/baguette.1
+
+# Install layout. Override on the command line, e.g.
+#   make PREFIX=/usr DESTDIR="$pkgdir" install
+PREFIX     := /usr/local
+BINDIR     := $(PREFIX)/bin
+MANDIR     := $(PREFIX)/share/man
+MAN1DIR    := $(MANDIR)/man1
+LICENSEDIR := $(PREFIX)/share/licenses/$(BIN)
+INSTALL    := install
 
 SRCS := $(shell find $(SRC_DIR) -name '*.c')
 OBJS := $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SRCS))
@@ -28,7 +38,7 @@ COV_OBJ  := $(COV_DIR)/obj
 COV_SRCS := $(filter-out $(SRC_DIR)/main.c,$(SRCS)) $(TEST_SRCS)
 COV_OBJS := $(COV_SRCS:%.c=$(COV_OBJ)/%.o)
 
-.PHONY: all clean run compdb protocol test coverage logs
+.PHONY: all clean run compdb protocol test coverage logs install uninstall
 
 all: $(BIN)
 
@@ -75,6 +85,17 @@ coverage: protocol $(COV_OBJS)
 $(COV_OBJ)/%.o: %.c
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) -I$(TEST_DIR) --coverage -c $< -o $@
+
+# Install the binary, man page and license into $(DESTDIR)$(PREFIX).
+install: $(BIN)
+	$(INSTALL) -Dm755 $(BIN) $(DESTDIR)$(BINDIR)/$(BIN)
+	$(INSTALL) -Dm644 $(MAN1) $(DESTDIR)$(MAN1DIR)/$(BIN).1
+	$(INSTALL) -Dm644 LICENSE $(DESTDIR)$(LICENSEDIR)/LICENSE
+
+uninstall:
+	rm -f $(DESTDIR)$(BINDIR)/$(BIN)
+	rm -f $(DESTDIR)$(MAN1DIR)/$(BIN).1
+	rm -f $(DESTDIR)$(LICENSEDIR)/LICENSE
 
 clean:
 	rm -rf $(OBJ_DIR) $(BIN) $(LOG) $(COV_DIR) $(GENERATED_SOURCES) $(GENERATED_HEADERS)

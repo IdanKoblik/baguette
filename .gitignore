@@ -5,6 +5,10 @@ coverage/
 compile_commands.json
 baguette.log
 
+# makepkg build artifacts (PKGBUILD builds in-tree)
+pkg/
+*.pkg.tar.zst
+
 # Coverage data
 *.gcno
 *.gcda
