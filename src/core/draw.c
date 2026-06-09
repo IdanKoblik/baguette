@@ -37,10 +37,21 @@ static void draw_full_background(struct hud_state *state) {
 // Draw one section. With pill=true it gets its own floating background
 // (HUD_STYLE_SEPARATED); with pill=false only the text is drawn, on top of the
 // shared full-width background (HUD_STYLE_FULL).
-static void draw_section(struct hud_state *state, const char *text, enum hud_align align,
-                         int pill, double tr, double tg, double tb) {
+// dr/dg/db is the section's default colour, used when the input carries no
+// %{#rrggbb} tag (sec->has_color == false).
+static void draw_section(struct hud_state *state, const struct fmt_section *sec, enum hud_align align,
+                         int pill, double dr, double dg, double db) {
+    const char *text = sec->text;
     if (!text || !*text)
         return;
+
+    // A %{#rrggbb} tag overrides the default; otherwise fall back to it.
+    double tr = dr, tg = dg, tb = db;
+    if (sec->has_color) {
+        tr = ((sec->color >> 16) & 0xFF) / 255.0;
+        tg = ((sec->color >>  8) & 0xFF) / 255.0;
+        tb = ( sec->color        & 0xFF) / 255.0;
+    }
 
     cairo_t *cr = state->cairo;
 
@@ -79,9 +90,14 @@ static void draw_section(struct hud_state *state, const char *text, enum hud_ali
     cairo_show_text(cr, text);
 }
 
-void draw_hud(struct hud_state *state, const char *left, const char *center, const char *right) {
+void draw_hud(struct hud_state *state, const struct hud_info *info) {
     if (!state) {
         ERROR("cannot draw hud, hud state not found.");
+        return;
+    }
+
+    if (!info) {
+        ERROR("cannot draw hud, hud info not found.");
         return;
     }
 
@@ -111,9 +127,9 @@ void draw_hud(struct hud_state *state, const char *left, const char *center, con
     if (!pill)
         draw_full_background(state);
 
-    draw_section(state, left,   HUD_LEFT,   pill, 0.729, 0.733, 0.945); // #babbf1
-    draw_section(state, center, HUD_CENTER, pill, 0.549, 0.667, 0.933); // #8caaee
-    draw_section(state, right,  HUD_RIGHT,  pill, 0.776, 0.816, 0.961); // #c6d0f5
+    draw_section(state, &info->left,   HUD_LEFT,   pill, 0.729, 0.733, 0.945); // #babbf1
+    draw_section(state, &info->center, HUD_CENTER, pill, 0.549, 0.667, 0.933); // #8caaee
+    draw_section(state, &info->right,  HUD_RIGHT,  pill, 0.776, 0.816, 0.961); // #c6d0f5
 
     cairo_surface_flush(state->cairo_surface);
 }

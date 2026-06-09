@@ -7,6 +7,7 @@
 #include <wayland-client-core.h>
 #include <wayland-client.h>
 #include "../wayland/protocols/wlr-layer-shell-unstable-v1-protocol.h"
+#include "format.h"
 
 #define HEIGHT 43 // px
 #define NAMESPACE "IdanK/Baguette"
@@ -16,10 +17,11 @@ enum hud_style {
     HUD_STYLE_FULL,
 };
 
+// Each section carries its decoded text plus an optional %{#rrggbb} colour.
 struct hud_info {
-    char right[MAX_INPUT];
-    char center[MAX_INPUT];
-    char left[MAX_INPUT];
+    struct fmt_section left;
+    struct fmt_section center;
+    struct fmt_section right;
 };
 
 struct hud_state {

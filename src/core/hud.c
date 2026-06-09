@@ -2,6 +2,7 @@
 #include "../util/log.h"
 #include "buffer.h"
 #include "surface.h"
+#include "format.h"
 #include <sys/mman.h>
 #include <wayland-client-core.h>
 #include <wayland-client-protocol.h>
@@ -91,9 +92,13 @@ void hud_info_process(struct hud_info *info, struct pollfd *stdin_fd) {
         // Trim trailing newline(s)
         while (n > 0 && (buf[n-1] == '\n' || buf[n-1] == '\r')) { buf[--n] = '\0'; }
 
-        snprintf(info->right,  MAX_INPUT, "%s", buf);
-        snprintf(info->left,   MAX_INPUT, "%s", buf);
-        snprintf(info->center, MAX_INPUT, "%s", buf);
+        struct fmt_frame frame;
+        fmt_decode(buf, &frame);
+
+        // Carry text and colour through to drawing in one shot.
+        info->left   = frame.left;
+        info->center = frame.center;
+        info->right  = frame.right;
 
         return;
     }
@@ -102,9 +107,9 @@ void hud_info_process(struct hud_info *info, struct pollfd *stdin_fd) {
         ERROR("cannot read from poll.");
 
     // n == 0: the input stream is genuinely closed -> show end-of-input.
-    snprintf(info->right,  MAX_INPUT, "%s", eof);
-    snprintf(info->left,   MAX_INPUT, "%s", eof);
-    snprintf(info->center, MAX_INPUT, "%s", eof);
+    struct fmt_section eof_sec = {0};
+    snprintf(eof_sec.text, FMT_MAX_TEXT, "%s", eof);
+    info->left = info->center = info->right = eof_sec;
 }
 
 int hud_state_destroy(struct hud_state *state) {

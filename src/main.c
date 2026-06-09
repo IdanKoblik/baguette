@@ -18,6 +18,18 @@ static void handle_signal(int signum) {
     running = 0;
 }
 
+static int section_changed(const struct fmt_section *a, const struct fmt_section *b) {
+    return a->has_color != b->has_color
+        || (a->has_color && a->color != b->color)
+        || strcmp(a->text, b->text) != 0;
+}
+
+static int hud_info_changed(const struct hud_info *a, const struct hud_info *b) {
+    return section_changed(&a->left,   &b->left)
+        || section_changed(&a->center, &b->center)
+        || section_changed(&a->right,  &b->right);
+}
+
 int main(int argc, char **argv) {
     // Layout style: separated pills by default, full-width background with --full.
     enum hud_style style = HUD_STYLE_SEPARATED;
@@ -67,22 +79,34 @@ int main(int argc, char **argv) {
     stdin_fd.fd = STDIN_FILENO;
     stdin_fd.events = POLLIN;
 
+    struct hud_info last = {0};
+    int drawn = 0;
+
     while (running) {
         wl_display_roundtrip(display);
         int want_scale = state.scale > 0 ? state.scale : 1;
+        int rebuilt = 0;
         if (want_scale != state.rendered_scale) {
             INFO("rescaling buffer: %d -> %d", state.rendered_scale, want_scale);
             if (init_buffer(&state) < 0)
                 ERROR("failed to rebuild buffer on rescale.");
+            else
+                rebuilt = 1; // new buffer has no pixels yet -> must repaint
         }
 
         hud_info_process(state.info, &stdin_fd);
-        draw_hud(&state, state.info->left, state.info->center, state.info->right);
 
-        wl_surface_attach(state.surface, state.buffer, 0, 0);
-        wl_surface_damage_buffer(state.surface, 0, 0, state.width, state.height);
-        wl_surface_commit(state.surface);
-        wl_display_flush(display);
+        if (!drawn || rebuilt || hud_info_changed(&last, state.info)) {
+            draw_hud(&state, state.info);
+
+            wl_surface_attach(state.surface, state.buffer, 0, 0);
+            wl_surface_damage_buffer(state.surface, 0, 0, state.width, state.height);
+            wl_surface_commit(state.surface);
+            wl_display_flush(display);
+
+            last  = *state.info;
+            drawn = 1;
+        }
     }
 
     closelog();
