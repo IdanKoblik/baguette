@@ -1,4 +1,5 @@
 #include "core/buffer.h"
+#include "core/config.h"
 #include "core/draw.h"
 #include "core/hud.h"
 #include "util/log.h"
@@ -67,6 +68,11 @@ int main(int argc, char **argv) {
         return -1;
     }
     state.style = style;
+
+    if (read_config(&state) < 0) {
+        ERROR("cannot read hud config.");
+        return -1;
+    }
 
     wl_registry_add_listener(state.registry, &registry_listener, &state);
     wl_display_roundtrip(display); // Roundtrip 1: Gets globals (compositor, etc..)
