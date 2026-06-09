@@ -89,12 +89,10 @@ TEST init_rejects_null_args(void) {
     int dummy;
     struct wl_registry *reg = (struct wl_registry *)&dummy;
     struct wl_display *disp = (struct wl_display *)&dummy;
-    struct config *cfg = (struct config *)&dummy;
 
-    ASSERT_EQ(-1, hud_state_init(NULL, reg, disp, cfg));
-    ASSERT_EQ(-1, hud_state_init(&state, reg, disp, NULL));
-    ASSERT_EQ(-1, hud_state_init(&state, NULL, disp, cfg));
-    ASSERT_EQ(-1, hud_state_init(&state, reg, NULL, cfg));
+    ASSERT_EQ(-1, hud_state_init(NULL, reg, disp));
+    ASSERT_EQ(-1, hud_state_init(&state, NULL, disp));
+    ASSERT_EQ(-1, hud_state_init(&state, reg, NULL));
     PASS();
 }
 
@@ -103,16 +101,15 @@ TEST init_zeroes_state_and_stores_handles(void) {
     int dummy;
     struct wl_registry *reg = (struct wl_registry *)&dummy;
     struct wl_display *disp = (struct wl_display *)&dummy;
-    struct config *cfg = (struct config *)&dummy;
 
     // Pre-dirty a field to confirm init memsets the struct.
     state.width = 0xdead;
 
-    ASSERT_EQ(0, hud_state_init(&state, reg, disp, cfg));
+    ASSERT_EQ(0, hud_state_init(&state, reg, disp));
     ASSERT_EQ((void *)disp, (void *)state.display);
     ASSERT_EQ((void *)reg, (void *)state.registry);
-    ASSERT_EQ((void *)cfg, (void *)state.cfg);
-    ASSERT_EQ(0, state.width); // zeroed by memset
+    ASSERT_EQ(NULL, (void *)state.cfg); // populated later by read_config()
+    ASSERT_EQ(0, state.width);          // zeroed by memset
     ASSERT_EQ(NULL, (void *)state.info);
     PASS();
 }

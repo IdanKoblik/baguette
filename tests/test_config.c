@@ -103,7 +103,10 @@ TEST config_parses_all_fields(void) {
     ASSERT(state.cfg != NULL);
     ASSERT_STR_EQ("JetBrains Mono", state.cfg->font);
     ASSERT_IN_RANGE(14.5, state.cfg->font_size, 0.0001);
-    ASSERT_STR_EQ("#1e1e2e", state.cfg->background_color);
+    // "#1e1e2e" -> r=0x1e, g=0x1e, b=0x2e, each normalised to [0,1].
+    ASSERT_IN_RANGE(0x1e / 255.0, state.cfg->background_color.r, 0.0001);
+    ASSERT_IN_RANGE(0x1e / 255.0, state.cfg->background_color.g, 0.0001);
+    ASSERT_IN_RANGE(0x2e / 255.0, state.cfg->background_color.b, 0.0001);
     ASSERT_EQ(8, state.cfg->hud_padding);
     ASSERT_EQ(12, state.cfg->radius);
     ASSERT_EQ(4, state.cfg->vmargin);
@@ -126,7 +129,9 @@ TEST config_missing_keys_stay_zeroed(void) {
     ASSERT_EQ(10, state.cfg->radius);
     // Everything not present in the file is left as the memset(0) default.
     ASSERT_EQ(NULL, (void *)state.cfg->font);
-    ASSERT_EQ(NULL, (void *)state.cfg->background_color);
+    ASSERT_IN_RANGE(0.0, state.cfg->background_color.r, 0.0001);
+    ASSERT_IN_RANGE(0.0, state.cfg->background_color.g, 0.0001);
+    ASSERT_IN_RANGE(0.0, state.cfg->background_color.b, 0.0001);
     ASSERT_EQ(0, state.cfg->hud_padding);
     ASSERT_EQ(0, state.cfg->vmargin);
     ASSERT_EQ(0, state.cfg->pad_x);
