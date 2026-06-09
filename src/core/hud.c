@@ -79,7 +79,7 @@ void hud_info_process(struct hud_info *info, struct pollfd *stdin_fd) {
     }
 
     if (ret == 0)
-        goto info_eof;
+        return;
 
     if (!(stdin_fd->revents & POLLIN))
         return;
@@ -101,7 +101,7 @@ void hud_info_process(struct hud_info *info, struct pollfd *stdin_fd) {
     if (n < 0 && !(errno == EAGAIN || errno == EWOULDBLOCK))
         ERROR("cannot read from poll.");
 
-info_eof:
+    // n == 0: the input stream is genuinely closed -> show end-of-input.
     snprintf(info->right,  MAX_INPUT, "%s", eof);
     snprintf(info->left,   MAX_INPUT, "%s", eof);
     snprintf(info->center, MAX_INPUT, "%s", eof);

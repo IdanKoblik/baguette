@@ -83,8 +83,6 @@ int main(int argc, char **argv) {
         wl_surface_damage_buffer(state.surface, 0, 0, state.width, state.height);
         wl_surface_commit(state.surface);
         wl_display_flush(display);
-
-        sleep(1);
     }
 
     closelog();
