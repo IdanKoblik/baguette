@@ -45,6 +45,14 @@ static void draw_section(struct hud_state *state, const struct fmt_section *sec,
     if (!text || !*text)
         return;
 
+    // A %{#rrggbb} tag overrides the default; otherwise fall back to it.
+    double tr = dr, tg = dg, tb = db;
+    if (sec->has_color) {
+        tr = ((sec->color >> 16) & 0xFF) / 255.0;
+        tg = ((sec->color >>  8) & 0xFF) / 255.0;
+        tb = ( sec->color        & 0xFF) / 255.0;
+    }
+
     cairo_t *cr = state->cairo;
 
     // Box geometry is sized from the whole section's ink; the per-span colours
