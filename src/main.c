@@ -1,15 +1,15 @@
-#include "core/hud.h"
 #include "core/buffer.h"
+#include "core/draw.h"
+#include "core/hud.h"
 #include "util/log.h"
 #include "wayland/listeners/global.h"
-#include "core/draw.h"
 #include <linux/limits.h>
+#include <poll.h>
 #include <signal.h>
+#include <stdio.h>
 #include <string.h>
 #include <sys/syslog.h>
 #include <unistd.h>
-#include <stdio.h>
-#include <poll.h>
 
 static volatile sig_atomic_t running = 1;
 
@@ -23,18 +23,16 @@ static int section_changed(const struct fmt_section *a, const struct fmt_section
         return 1;
     for (size_t i = 0; i < a->nspans; i++) {
         const struct fmt_span *x = &a->spans[i], *y = &b->spans[i];
-        if (x->start != y->start || x->len != y->len
-            || x->has_color != y->has_color
-            || (x->has_color && x->color != y->color))
+        if (x->start != y->start || x->len != y->len || x->has_color != y->has_color ||
+            (x->has_color && x->color != y->color))
             return 1;
     }
     return 0;
 }
 
 static int hud_info_changed(const struct hud_info *a, const struct hud_info *b) {
-    return section_changed(&a->left,   &b->left)
-        || section_changed(&a->center, &b->center)
-        || section_changed(&a->right,  &b->right);
+    return section_changed(&a->left, &b->left) || section_changed(&a->center, &b->center) ||
+           section_changed(&a->right, &b->right);
 }
 
 int main(int argc, char **argv) {
@@ -111,7 +109,7 @@ int main(int argc, char **argv) {
             wl_surface_commit(state.surface);
             wl_display_flush(display);
 
-            last  = *state.info;
+            last = *state.info;
             drawn = 1;
         }
     }

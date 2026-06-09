@@ -1,13 +1,13 @@
 #pragma once
 
-#include <stdint.h>
 #include "hud.h"
+#include <stdint.h>
 
 struct buffer_geometry {
-    int scale;       // effective scale (>= 1)
+    int scale; // effective scale (>= 1)
     int dev_width;
     int dev_height;
-    int stride;      // bytes per row
+    int stride; // bytes per row
     int size;
 };
 

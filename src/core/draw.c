@@ -15,10 +15,10 @@ enum hud_align { HUD_LEFT, HUD_CENTER, HUD_RIGHT };
 static void rounded_rect(cairo_t *cr, double x, double y, double w, double h, double r) {
     double deg = M_PI / 180.0;
     cairo_new_sub_path(cr);
-    cairo_arc(cr, x + w - r, y + r,     r, -90 * deg,   0 * deg);
-    cairo_arc(cr, x + w - r, y + h - r, r,   0 * deg,  90 * deg);
-    cairo_arc(cr, x + r,     y + h - r, r,  90 * deg, 180 * deg);
-    cairo_arc(cr, x + r,     y + r,     r, 180 * deg, 270 * deg);
+    cairo_arc(cr, x + w - r, y + r, r, -90 * deg, 0 * deg);
+    cairo_arc(cr, x + w - r, y + h - r, r, 0 * deg, 90 * deg);
+    cairo_arc(cr, x + r, y + h - r, r, 90 * deg, 180 * deg);
+    cairo_arc(cr, x + r, y + r, r, 180 * deg, 270 * deg);
     cairo_close_path(cr);
 }
 
@@ -40,7 +40,8 @@ static void draw_full_background(struct hud_state *state) {
 // shared full-width background (HUD_STYLE_FULL).
 // dr/dg/db is the default colour, used for any span that carries no %{#rrggbb}
 // tag (span->has_color == false).
-static void draw_section(struct hud_state *state, const struct fmt_section *sec, enum hud_align align, int pill, double dr, double dg, double db) {
+static void draw_section(struct hud_state *state, const struct fmt_section *sec,
+                         enum hud_align align, int pill, double dr, double dg, double db) {
     const char *text = sec->text;
     if (!text || !*text)
         return;
@@ -62,10 +63,18 @@ static void draw_section(struct hud_state *state, const struct fmt_section *sec,
     double box_h = state->height - 2 * PILL_VMARGIN;
     double box_x;
     switch (align) {
-        case HUD_LEFT:   box_x = HUD_PADDING; break;
-        case HUD_CENTER: box_x = round((state->width - box_w) / 2); break;
-        case HUD_RIGHT:  box_x = state->width - HUD_PADDING - box_w; break;
-        default:         box_x = HUD_PADDING; break;
+    case HUD_LEFT:
+        box_x = HUD_PADDING;
+        break;
+    case HUD_CENTER:
+        box_x = round((state->width - box_w) / 2);
+        break;
+    case HUD_RIGHT:
+        box_x = state->width - HUD_PADDING - box_w;
+        break;
+    default:
+        box_x = HUD_PADDING;
+        break;
     }
 
     // Per-section pill background (#101010), only in separated mode.
@@ -90,8 +99,8 @@ static void draw_section(struct hud_state *state, const struct fmt_section *sec,
         double tr = dr, tg = dg, tb = db;
         if (sp->has_color) {
             tr = ((sp->color >> 16) & 0xFF) / 255.0;
-            tg = ((sp->color >>  8) & 0xFF) / 255.0;
-            tb = ( sp->color        & 0xFF) / 255.0;
+            tg = ((sp->color >> 8) & 0xFF) / 255.0;
+            tb = (sp->color & 0xFF) / 255.0;
         }
 
         char seg[FMT_MAX_TEXT];
@@ -124,7 +133,8 @@ void draw_hud(struct hud_state *state, const struct hud_info *info) {
     cairo_paint(cr);
     cairo_restore(cr);
 
-    cairo_select_font_face(cr, "JetbrainsMono Nerd Font", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
+    cairo_select_font_face(cr, "JetbrainsMono Nerd Font", CAIRO_FONT_SLANT_NORMAL,
+                           CAIRO_FONT_WEIGHT_NORMAL);
     cairo_set_font_size(cr, 14); // TODO config
 
     cairo_font_options_t *fo = cairo_font_options_create();
@@ -140,9 +150,9 @@ void draw_hud(struct hud_state *state, const struct hud_info *info) {
     if (!pill)
         draw_full_background(state);
 
-    draw_section(state, &info->left,   HUD_LEFT,   pill, 0.729, 0.733, 0.945); // #babbf1
+    draw_section(state, &info->left, HUD_LEFT, pill, 0.729, 0.733, 0.945);     // #babbf1
     draw_section(state, &info->center, HUD_CENTER, pill, 0.549, 0.667, 0.933); // #8caaee
-    draw_section(state, &info->right,  HUD_RIGHT,  pill, 0.776, 0.816, 0.961); // #c6d0f5
+    draw_section(state, &info->right, HUD_RIGHT, pill, 0.776, 0.816, 0.961);   // #c6d0f5
 
     cairo_surface_flush(state->cairo_surface);
 }
