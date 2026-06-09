@@ -187,7 +187,3 @@ exec python3 /path/to/zaatar/main.py | /path/to/baguette --full
 
 Anything that can print `left \t center \t right` lines works just as well —
 za'atar is just a convenient default.
-
-## License
-
-See [LICENSE](LICENSE).
