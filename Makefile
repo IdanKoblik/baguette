@@ -38,7 +38,12 @@ COV_OBJ  := $(COV_DIR)/obj
 COV_SRCS := $(filter-out $(SRC_DIR)/main.c,$(SRCS)) $(TEST_SRCS)
 COV_OBJS := $(COV_SRCS:%.c=$(COV_OBJ)/%.o)
 
-.PHONY: all clean run compdb protocol test coverage logs install uninstall
+CLANG_FORMAT := clang-format
+# Format only hand-written sources: skip generated protocol code and the
+# vendored greatest.h test header.
+FORMAT_SRCS  := $(shell find $(SRC_DIR) $(TEST_DIR) \( -name '*.c' -o -name '*.h' \) 2>/dev/null | grep -vE '/protocols/|tests/greatest\.h')
+
+.PHONY: all clean run compdb protocol test coverage logs install uninstall format format-check
 
 all: $(BIN)
 
@@ -85,6 +90,14 @@ coverage: protocol $(COV_OBJS)
 $(COV_OBJ)/%.o: %.c
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) -I$(TEST_DIR) --coverage -c $< -o $@
+
+# Format all hand-written sources in place (requires clang-format).
+format:
+	$(CLANG_FORMAT) -i $(FORMAT_SRCS)
+
+# Check formatting without modifying files; fails if any file needs formatting.
+format-check:
+	$(CLANG_FORMAT) --dry-run --Werror $(FORMAT_SRCS)
 
 # Install the binary, man page and license into $(DESTDIR)$(PREFIX).
 install: $(BIN)

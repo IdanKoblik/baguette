@@ -43,15 +43,13 @@ int main(int argc, char **argv) {
 
     int flags = parse_flags(argc, argv);
     if (flags & FLAG_HELP) {
-        printf(
-            "Usage: baguette [options]\n"
-            "\n"
-            "Options:\n"
-            "  -h, --help        Show this help message\n"
-            "  -f, --full        Use full HUD style\n"
-            "  -s, --separated   Use separated HUD style\n"
-            "\n"
-        );
+        printf("Usage: baguette [options]\n"
+               "\n"
+               "Options:\n"
+               "  -h, --help        Show this help message\n"
+               "  -f, --full        Use full HUD style\n"
+               "  -s, --separated   Use separated HUD style\n"
+               "\n");
         return 0;
     }
 
