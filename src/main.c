@@ -1,6 +1,7 @@
 #include "core/buffer.h"
 #include "core/config.h"
 #include "core/draw.h"
+#include "core/flags.h"
 #include "core/hud.h"
 #include "util/log.h"
 #include "wayland/listeners/global.h"
@@ -39,12 +40,23 @@ static int hud_info_changed(const struct hud_info *a, const struct hud_info *b) 
 int main(int argc, char **argv) {
     // Layout style: separated pills by default, full-width background with --full.
     enum hud_style style = HUD_STYLE_SEPARATED;
-    for (int i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "--full") == 0)
-            style = HUD_STYLE_FULL;
-        else if (strcmp(argv[i], "--separated") == 0)
-            style = HUD_STYLE_SEPARATED;
+
+    int flags = parse_flags(argc, argv);
+    if (flags & FLAG_HELP) {
+        printf("Usage: baguette [options]\n"
+               "\n"
+               "Options:\n"
+               "  -h, --help        Show this help message\n"
+               "  -f, --full        Use full HUD style\n"
+               "  -s, --separated   Use separated HUD style\n"
+               "\n");
+        return 0;
     }
+
+    if (flags & FLAG_FULL)
+        style = HUD_STYLE_FULL;
+    else if (flags & FLAG_SEPARATED)
+        style = HUD_STYLE_SEPARATED;
 
     openlog(NULL, LOG_PID | LOG_PERROR, LOG_USER);
 
