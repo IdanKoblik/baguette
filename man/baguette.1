@@ -1,11 +1,14 @@
 .\" Manpage for baguette.
 .\" Contact via https://github.com/IdanKoblik/baguette to correct errors or typos.
-.TH BAGUETTE 1 "2026-06-09" "baguette" "User Commands"
+.TH BAGUETTE 1 "2026-06-11" "baguette" "User Commands"
 .SH NAME
 baguette \- minimal Wayland HUD / status bar
 .SH SYNOPSIS
 .B baguette
 .RB [ \-\-separated " | " \-\-full ]
+.br
+.B baguette
+.B \-\-help
 .SH DESCRIPTION
 .B baguette
 is a lightweight overlay bar for
@@ -28,10 +31,14 @@ or
 (or close the pipe) to exit.
 .SH OPTIONS
 .TP
-.B \-\-separated
+.BR \-h ", " \-\-help
+Print a short usage summary to standard output and exit immediately without
+drawing anything.
+.TP
+.BR \-s ", " \-\-separated
 Draw each section as a separate rounded pill. This is the default.
 .TP
-.B \-\-full
+.BR \-f ", " \-\-full
 Draw one full-width background bar instead of separate pills.
 .SH INPUT FORMAT
 Each line of standard input is one frame. A frame is split into up to three

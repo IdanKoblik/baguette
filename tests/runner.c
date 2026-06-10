@@ -6,6 +6,7 @@ SUITE_EXTERN(log_suite);
 SUITE_EXTERN(hud_suite);
 SUITE_EXTERN(format_suite);
 SUITE_EXTERN(config_suite);
+SUITE_EXTERN(flags_suite);
 
 GREATEST_MAIN_DEFS();
 
@@ -16,5 +17,6 @@ int main(int argc, char **argv) {
     RUN_SUITE(log_suite);
     RUN_SUITE(hud_suite);
     RUN_SUITE(format_suite);
+    RUN_SUITE(flags_suite);
     GREATEST_MAIN_END();
 }
