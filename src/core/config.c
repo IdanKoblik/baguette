@@ -6,10 +6,74 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #define CFG_LOOKUP_STRING(cfg, key, dst) config_lookup_string((cfg), (key), (const char **)&(dst))
-
 #define CFG_LOOKUP_FLOAT(cfg, key, dst) config_lookup_float((cfg), (key), &(dst))
+
+static struct config *config_create_default(void) {
+    struct config *cfg = calloc(1, sizeof(*cfg));
+    if (!cfg)
+        return NULL;
+
+    cfg->font_size = 14.0f;
+    cfg->height = 32.0f;
+    cfg->hud_padding = 8.0f;
+    cfg->radius = 5.0f;
+    cfg->vmargin = 4.0f;
+    cfg->pad_x = 8.0f;
+
+    cfg->font = strdup("monospace");
+
+    cfg->background_color.r = 0.0;
+    cfg->background_color.g = 0.0;
+    cfg->background_color.b = 0.0;
+
+    return cfg;
+}
+
+static int write_default_config(const char *path, struct config *def_config) {
+    if (!def_config) {
+        ERROR("missing default config.");
+        return -1;
+    }
+
+    config_t cfg;
+    config_init(&cfg);
+
+    config_setting_t *root = config_root_setting(&cfg);
+    config_setting_t *s;
+
+    s = config_setting_add(root, "font_size", CONFIG_TYPE_FLOAT);
+    config_setting_set_float(s, def_config->font_size);
+
+    s = config_setting_add(root, "font", CONFIG_TYPE_STRING);
+    config_setting_set_string(s, def_config->font);
+
+    s = config_setting_add(root, "height", CONFIG_TYPE_FLOAT);
+    config_setting_set_float(s, def_config->height);
+
+    s = config_setting_add(root, "background", CONFIG_TYPE_STRING);
+    config_setting_set_string(s, "#000000");
+
+    s = config_setting_add(root, "hud_padding", CONFIG_TYPE_FLOAT);
+    config_setting_set_float(s, def_config->hud_padding);
+
+    s = config_setting_add(root, "radius", CONFIG_TYPE_FLOAT);
+    config_setting_set_float(s, def_config->radius);
+
+    s = config_setting_add(root, "vmargin", CONFIG_TYPE_FLOAT);
+    config_setting_set_float(s, def_config->vmargin);
+
+    s = config_setting_add(root, "pad_x", CONFIG_TYPE_FLOAT);
+    config_setting_set_float(s, def_config->pad_x);
+
+    int ok = config_write_file(&cfg, path);
+
+    config_destroy(&cfg);
+
+    return ok ? 0 : -1;
+}
 
 int read_config(struct hud_state *state) {
     if (!state) {
@@ -28,6 +92,16 @@ int read_config(struct hud_state *state) {
     if (len < 0 || (size_t)len >= sizeof(cfg_path)) {
         ERROR("cannot encode config path.");
         return -1;
+    }
+
+    if (access(cfg_path, F_OK) != 0) {
+        struct config *def_cfg = config_create_default();
+        if (!def_cfg) {
+            ERROR("cannot init default config.");
+            return -1;
+        }
+
+        return write_default_config(cfg_path, def_cfg);
     }
 
     config_t config;
