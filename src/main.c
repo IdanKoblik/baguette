@@ -9,6 +9,7 @@
 #include <poll.h>
 #include <signal.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/syslog.h>
 #include <unistd.h>
@@ -63,27 +64,27 @@ int main(int argc, char **argv) {
     struct wl_display *display = wl_display_connect(NULL);
     if (!display) {
         ERROR("failed to init wayland display.");
-        return -1;
+        goto cleanup;
     }
 
     INFO("Success: Connected to the Wayland display successfully!");
     struct wl_registry *registry = wl_display_get_registry(display);
     if (!registry) {
         ERROR("Failed to get display registry.");
-        return -1;
+        goto cleanup;
     }
 
     INFO("Success: Connected to the display registry successfully!");
     struct hud_state state = {0};
     if (hud_state_init(&state, registry, display) < 0) {
         ERROR("failed to init hud state.");
-        return -1;
+        goto cleanup;
     }
     state.style = style;
 
     if (read_config(&state) < 0) {
         ERROR("cannot read hud config.");
-        return -1;
+        goto cleanup;
     }
 
     wl_registry_add_listener(state.registry, &registry_listener, &state);
@@ -91,7 +92,7 @@ int main(int argc, char **argv) {
 
     if (hud_state_active(&state) < 0) {
         ERROR("failed to activate hud.");
-        return -1;
+        goto cleanup;
     }
 
     INFO("Success: Loaded hud successfully!");
@@ -132,9 +133,12 @@ int main(int argc, char **argv) {
         }
     }
 
+cleanup:
     closelog();
-    if (hud_state_destroy(&state) < 0)
+    if (hud_state_destroy(&state) < 0) {
         ERROR("failed to destory hud state");
+        exit(1);
+    }
 
     return 0;
 }
