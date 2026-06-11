@@ -4,8 +4,7 @@
 #include "../wayland/protocols/wlr-layer-shell-unstable-v1-protocol.h"
 
 // The compositor reports HiDPI scale via wl_surface.preferred_buffer_scale.
-static void surface_handle_preferred_buffer_scale(void *data, struct wl_surface *surface,
-                                                  int32_t factor) {
+static void surface_handle_preferred_buffer_scale(void *data, struct wl_surface *surface, int32_t factor) {
     (void)surface;
     struct hud_state *state = (struct hud_state *)data;
     if (factor > 0)
@@ -25,8 +24,7 @@ static void surface_handle_leave(void *data, struct wl_surface *surface, struct 
     (void)output;
 }
 
-static void surface_handle_preferred_buffer_transform(void *data, struct wl_surface *surface,
-                                                      uint32_t transform) {
+static void surface_handle_preferred_buffer_transform(void *data, struct wl_surface *surface, uint32_t transform) {
     (void)data;
     (void)surface;
     (void)transform;

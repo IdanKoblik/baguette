@@ -24,8 +24,7 @@ int read_config(struct hud_state *state) {
     }
 
     char cfg_path[PATH_MAX];
-    int len =
-        snprintf(cfg_path, sizeof(cfg_path), "%s/.config/baguette/%s", home_path, CONFIG_FILE);
+    int len = snprintf(cfg_path, sizeof(cfg_path), "%s/.config/baguette/%s", home_path, CONFIG_FILE);
     if (len < 0 || (size_t)len >= sizeof(cfg_path)) {
         ERROR("cannot encode config path.");
         return -1;
