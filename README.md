@@ -140,21 +140,35 @@ printf ' 1 2 3\t%%{#ff5555}CPU 72°C%%{-}\n' | ./baguette
 ### Styling
 
 Global look (font, colours, sizes) is read from a
-[libconfig](https://hyperrealm.github.io/libconfig/) file. See
-[`assets/style.cfg`](assets/style.cfg) for the available keys:
+[libconfig](https://hyperrealm.github.io/libconfig/) file at:
+
+```
+~/.config/baguette/style.cfg
+```
+
+You don't have to create it yourself: the **first time** baguette starts and
+that file is missing, it writes a default `style.cfg` to that path. Run
+baguette once, then open the file and tweak it to taste. (You can also copy
+[`assets/style.cfg`](assets/style.cfg) there as a starting point.)
+
+Available keys:
 
 ```ini
-font = "JetbrainsMono Nerd Font";
-font_size = 14.0;
+font = "JetbrainsMono Nerd Font";   # font family (default: "monospace")
+font_size = 14.0;                   # point size (default: 14.0)
 
-height = 32.0;
-background = "#101010";
+height = 32.0;                      # bar height in px (default: 32.0)
+background = "#101010";             # "#RRGGBB" hex colour (default: "#000000")
 
-hud_padding = 8.0;
-radius = 12.0;
-vmargin = 4.0;
-pad_x = 6.0;
+hud_padding = 8.0;                  # inner padding around content (default: 8.0)
+radius = 12.0;                      # corner radius of the pills (default: 5.0)
+vmargin = 4.0;                      # vertical margin from the screen edge (default: 4.0)
+pad_x = 6.0;                        # horizontal padding per section (default: 8.0)
 ```
+
+Numbers may be written as integers or floats interchangeably (`radius = 12;`
+and `radius = 12.0;` both work). After editing, restart baguette to pick up the
+changes.
 
 ## Example: za'atar
 
