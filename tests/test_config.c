@@ -72,15 +72,54 @@ TEST config_fails_without_home(void) {
     PASS();
 }
 
-TEST config_fails_when_file_missing(void) {
+// When no style.cfg exists, read_config() writes a default one and returns 0.
+// It does not populate state->cfg on this first pass; the freshly written file
+// is what subsequent runs read back.
+TEST config_writes_default_when_file_missing(void) {
     set_temp_home(); // dir exists but no style.cfg written
 
     struct hud_state state = {0};
     int rc = read_config(&state);
 
-    restore_home();
-    ASSERT_EQ(-1, rc);
+    ASSERT_EQ(0, rc);
     ASSERT_EQ(NULL, (void *)state.cfg);
+
+    // The default config file should now exist on disk.
+    char path[4096];
+    snprintf(path, sizeof(path), "%s/.config/baguette/%s", tmp_home, CONFIG_FILE);
+    ASSERT_EQ(0, access(path, F_OK));
+
+    restore_home();
+    PASS();
+}
+
+// After read_config() writes a default config, a second call parses it back and
+// yields the documented default values.
+TEST config_reads_back_written_defaults(void) {
+    set_temp_home(); // dir exists but no style.cfg written
+
+    struct hud_state first = {0};
+    ASSERT_EQ(0, read_config(&first)); // writes the default file
+
+    struct hud_state state = {0};
+    int rc = read_config(&state); // now the file exists and is parsed
+    restore_home();
+
+    ASSERT_EQ(0, rc);
+    ASSERT(state.cfg != NULL);
+    ASSERT_STR_EQ("monospace", state.cfg->font);
+    ASSERT_IN_RANGE(14.0, state.cfg->font_size, 0.0001);
+    ASSERT_IN_RANGE(32.0, state.cfg->height, 0.0001);
+    // "#000000" -> all channels 0.
+    ASSERT_IN_RANGE(0.0, state.cfg->background_color.r, 0.0001);
+    ASSERT_IN_RANGE(0.0, state.cfg->background_color.g, 0.0001);
+    ASSERT_IN_RANGE(0.0, state.cfg->background_color.b, 0.0001);
+    ASSERT_IN_RANGE(8.0, state.cfg->hud_padding, 0.0001);
+    ASSERT_IN_RANGE(5.0, state.cfg->radius, 0.0001);
+    ASSERT_IN_RANGE(4.0, state.cfg->vmargin, 0.0001);
+    ASSERT_IN_RANGE(8.0, state.cfg->pad_x, 0.0001);
+
+    free(state.cfg);
     PASS();
 }
 
@@ -156,7 +195,8 @@ TEST config_fails_on_malformed_file(void) {
 SUITE(config_suite) {
     RUN_TEST(config_rejects_null_state);
     RUN_TEST(config_fails_without_home);
-    RUN_TEST(config_fails_when_file_missing);
+    RUN_TEST(config_writes_default_when_file_missing);
+    RUN_TEST(config_reads_back_written_defaults);
     RUN_TEST(config_parses_all_fields);
     RUN_TEST(config_missing_keys_stay_zeroed);
     RUN_TEST(config_fails_on_malformed_file);

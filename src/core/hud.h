@@ -56,8 +56,7 @@ struct hud_state {
     struct config *cfg;
 };
 
-int hud_state_init(struct hud_state *state, struct wl_registry *registry,
-                   struct wl_display *display);
+int hud_state_init(struct hud_state *state, struct wl_registry *registry, struct wl_display *display);
 int hud_state_active(struct hud_state *state);
 void hud_info_process(struct hud_info *info, struct pollfd *stdin_fd);
 int hud_state_destroy(struct hud_state *state);

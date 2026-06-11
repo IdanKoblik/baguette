@@ -25,11 +25,11 @@
         syslog(LOG_INFO, "[" __FILE__ ":" STR(__LINE__) "]: " fmt, ##__VA_ARGS__); \
     } while (0)
 
-#define ERROR(fmt, ...)                                                                            \
-    do {                                                                                           \
-        int _err = errno;                                                                          \
-        syslog(LOG_ERR, "[" __FILE__ ":" STR(__LINE__) "]: " fmt " (errno=%d: %s)", ##__VA_ARGS__, \
-               _err, strerror(_err));                                                              \
+#define ERROR(fmt, ...)                                                                                  \
+    do {                                                                                                 \
+        int _err = errno;                                                                                \
+        syslog(LOG_ERR, "[" __FILE__ ":" STR(__LINE__) "]: " fmt " (errno=%d: %s)", ##__VA_ARGS__, _err, \
+               strerror(_err));                                                                          \
     } while (0)
 
 #define WARN(fmt, ...)                                                                \
