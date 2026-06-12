@@ -1,11 +1,13 @@
 #include "config.h"
 #include "../util/log.h"
 #include "hud.h"
+#include <errno.h>
 #include <libconfig.h>
 #include <linux/limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #define CFG_LOOKUP_STRING(cfg, key, dst) config_lookup_string((cfg), (key), (const char **)&(dst))
@@ -36,6 +38,16 @@ static int write_default_config(const char *path, struct config *def_config) {
     if (!def_config) {
         ERROR("missing default config.");
         return -1;
+    }
+
+    char *dir = strrchr(path, '/') ? strndup(path, strrchr(path, '/') - path) : NULL;
+    if (dir) {
+        int made = mkdir(dir, 0755);
+        free(dir);
+        if (made != 0 && errno != EEXIST) {
+            ERROR("cannot create config directory.");
+            return -1;
+        }
     }
 
     config_t cfg;
