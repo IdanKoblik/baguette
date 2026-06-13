@@ -1,8 +1,5 @@
 # Maintainer: Idan Koblik <https://github.com/IdanKoblik>
-#
-# In-tree PKGBUILD: builds the checked-out source. Run `makepkg -si` from the
-# repo root. (To publish a VCS package to the AUR instead, point source=() at
-# git+https://github.com/IdanKoblik/baguette.git and build "$srcdir/baguette".)
+
 pkgname=baguette
 pkgver=r61.gf1d673f
 pkgrel=1
