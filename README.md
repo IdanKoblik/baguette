@@ -47,6 +47,21 @@ The binary is dynamically linked against `wayland-client`, `cairo`,
 `libconfig` and `libm`, so make sure those runtime libraries are installed.
 If you'd rather build it yourself, see below.
 
+### Arch Linux (PKGBUILD)
+
+Arch users can build and install a proper package with the bundled
+[`PKGBUILD`](PKGBUILD), which derives the version from git, runs the test
+suite and pulls in the runtime dependencies automatically:
+
+```sh
+git clone https://github.com/IdanKoblik/baguette.git
+cd baguette
+makepkg -si
+```
+
+`makepkg -si` builds the package and installs it (and its dependencies) with
+`pacman`.
+
 ## Build from source
 
 baguette is plain C17 with a `Makefile` — no build system to learn.
