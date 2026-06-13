@@ -5,6 +5,7 @@
 #include "core/hud.h"
 #include "util/log.h"
 #include "wayland/listeners/global.h"
+#include <errno.h>
 #include <linux/limits.h>
 #include <poll.h>
 #include <signal.h>
@@ -99,15 +100,39 @@ int main(int argc, char **argv) {
     signal(SIGINT, handle_signal);
     signal(SIGTERM, handle_signal);
 
-    struct pollfd stdin_fd;
-    stdin_fd.fd = STDIN_FILENO;
-    stdin_fd.events = POLLIN;
+    enum { FD_WAYLAND, FD_STDIN, FD_COUNT };
+    struct pollfd fds[FD_COUNT];
+    fds[FD_WAYLAND].fd = wl_display_get_fd(display);
+    fds[FD_WAYLAND].events = POLLIN;
+    fds[FD_STDIN].fd = STDIN_FILENO;
+    fds[FD_STDIN].events = POLLIN;
 
     struct hud_info last = {0};
     int drawn = 0;
 
     while (running) {
-        wl_display_roundtrip(display);
+        // Stage Wayland reads: dispatch anything already queued, then arm the
+        // read so poll() can wake us when more events arrive on the fd.
+        while (wl_display_prepare_read(display) != 0)
+            wl_display_dispatch_pending(display);
+        wl_display_flush(display);
+
+        int ret = poll(fds, FD_COUNT, -1);
+        if (ret < 0) {
+            wl_display_cancel_read(display);
+            if (errno == EINTR)
+                continue; // interrupted by a signal (e.g. SIGTERM) -> re-check running
+            ERROR("poll failed.");
+            break;
+        }
+
+        if (fds[FD_WAYLAND].revents & POLLIN) {
+            wl_display_read_events(display);
+            wl_display_dispatch_pending(display);
+        } else {
+            wl_display_cancel_read(display);
+        }
+
         int want_scale = state.scale > 0 ? state.scale : 1;
         int rebuilt = 0;
         if (want_scale != state.rendered_scale) {
@@ -118,7 +143,8 @@ int main(int argc, char **argv) {
                 rebuilt = 1; // new buffer has no pixels yet -> must repaint
         }
 
-        hud_info_process(state.info, &stdin_fd);
+        if (fds[FD_STDIN].revents & POLLIN)
+            hud_info_process(state.info, &fds[FD_STDIN]);
 
         if (!drawn || rebuilt || hud_info_changed(&last, state.info)) {
             draw_hud(&state, state.info);

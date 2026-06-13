@@ -73,15 +73,6 @@ void hud_info_process(struct hud_info *info, struct pollfd *stdin_fd) {
     }
 
     const char *eof = "<EOF>";
-    int ret = poll(stdin_fd, 1, 1000);
-    if (ret < 0) {
-        ERROR("something went wrong with poll.");
-        return;
-    }
-
-    if (ret == 0)
-        return;
-
     if (!(stdin_fd->revents & POLLIN))
         return;
 

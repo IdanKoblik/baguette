@@ -5,8 +5,8 @@
 #include <string.h>
 #include <unistd.h>
 
-// hud_info_process() polls a fd and decodes the line it reads into the three
-// tab-separated hud_info sections.
+// hud_info_process() reads a fd the caller has already polled (revents&POLLIN)
+// and decodes the line into the three tab-separated hud_info sections.
 static int temp_fd_with(const char *contents) {
     char path[] = "/tmp/baguette_hud_XXXXXX";
     int fd = mkstemp(path);
@@ -20,7 +20,7 @@ static int temp_fd_with(const char *contents) {
 TEST process_decodes_tab_separated_sections(void) {
     struct hud_info info = {0};
     int fd = temp_fd_with("L\tC\tR");
-    struct pollfd pfd = {.fd = fd, .events = POLLIN};
+    struct pollfd pfd = {.fd = fd, .events = POLLIN, .revents = POLLIN};
 
     hud_info_process(&info, &pfd);
     close(fd);
@@ -34,7 +34,7 @@ TEST process_decodes_tab_separated_sections(void) {
 TEST process_trims_trailing_newline(void) {
     struct hud_info info = {0};
     int fd = temp_fd_with("world\n");
-    struct pollfd pfd = {.fd = fd, .events = POLLIN};
+    struct pollfd pfd = {.fd = fd, .events = POLLIN, .revents = POLLIN};
 
     hud_info_process(&info, &pfd);
     close(fd);
@@ -46,7 +46,7 @@ TEST process_trims_trailing_newline(void) {
 TEST process_trims_trailing_crlf(void) {
     struct hud_info info = {0};
     int fd = temp_fd_with("line\r\n");
-    struct pollfd pfd = {.fd = fd, .events = POLLIN};
+    struct pollfd pfd = {.fd = fd, .events = POLLIN, .revents = POLLIN};
 
     hud_info_process(&info, &pfd);
     close(fd);
@@ -58,7 +58,7 @@ TEST process_trims_trailing_crlf(void) {
 TEST process_eof_yields_eof_marker(void) {
     struct hud_info info = {0};
     int fd = temp_fd_with(""); // empty file -> read() returns 0 (EOF)
-    struct pollfd pfd = {.fd = fd, .events = POLLIN};
+    struct pollfd pfd = {.fd = fd, .events = POLLIN, .revents = POLLIN};
 
     hud_info_process(&info, &pfd);
     close(fd);
@@ -71,7 +71,7 @@ TEST process_eof_yields_eof_marker(void) {
 
 TEST process_null_info_is_safe(void) {
     int fd = temp_fd_with("data");
-    struct pollfd pfd = {.fd = fd, .events = POLLIN};
+    struct pollfd pfd = {.fd = fd, .events = POLLIN, .revents = POLLIN};
     hud_info_process(NULL, &pfd); // must not crash
     close(fd);
     PASS();
