@@ -1,7 +1,7 @@
 # Maintainer: Idan Koblik <https://github.com/IdanKoblik>
 
 pkgname=baguette
-pkgver=r61.gf1d673f
+pkgver=2026.b2.r4.gcdd21d9
 pkgrel=1
 pkgdesc='A minimal Wayland HUD / status bar written in C17'
 arch=('x86_64')
